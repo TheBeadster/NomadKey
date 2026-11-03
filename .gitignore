@@ -116,3 +116,4 @@ sentry-wizard
 .planning/
 .swarm/
 .mcp.json
+/rns-backend-py/src/main/assets/nomadkey-test-pin.json

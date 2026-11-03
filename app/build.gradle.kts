@@ -256,16 +256,16 @@ android {
             buildConfigField("Boolean", "ENABLE_MEMORY_PROFILING", "false")
         }
         debug {
-            applicationIdSuffix = ".debug"
-            versionNameSuffix = "-debug"
-            resValue("string", "app_name", "columbatest")
+            applicationIdSuffix = ".nomadkey.dev"
+            versionNameSuffix = "-nomadkey-dev"
+            resValue("string", "app_name", "Columba NomadKey DEV")
             if (releaseSigningConfigured) {
                 signingConfig = signingConfigs.getByName("release")
             }
             buildConfigField("Boolean", "USE_RUST", "false")
             buildConfigField("Boolean", "ENABLE_MEMORY_PROFILING", "true")
-            enableUnitTestCoverage = true
-            enableAndroidTestCoverage = true
+            enableUnitTestCoverage = false
+            enableAndroidTestCoverage = false
         }
     }
 
@@ -543,7 +543,7 @@ dependencies {
     implementation("com.google.android.gms:play-services-location:21.2.0")
 
     // Memory leak detection
-    debugImplementation("com.squareup.leakcanary:leakcanary-android:2.14")
+    // NomadKey development builds must not persist sensitive heap snapshots.
 
     // Testing
     testImplementation(libs.junit)

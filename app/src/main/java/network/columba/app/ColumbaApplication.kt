@@ -133,6 +133,9 @@ class ColumbaApplication : Application() {
 
     override fun onCreate() {
         super.onCreate()
+        // NomadKey owns an isolated Python RNS stack and deliberately avoids
+        // normal identity initialization, collectors and crash persistence.
+        if (getCurrentProcessName()?.endsWith(":nomadkey") == true) return
 
         // Install crash handler FIRST (before anything else that might crash)
         // This ensures we capture crashes from any subsequent initialization
