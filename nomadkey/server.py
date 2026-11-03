@@ -91,9 +91,14 @@ def main():
     RNS.Reticulum(configdir=args.rnsconfig,loglevel=RNS.LOG_ERROR)
     server=Server(args.state,args.content,json.loads(Path(args.manifest).read_text()),args.lifetime)
     print(json.dumps({'destination':server.destination.hash.hex(),'public_key':server.auth.public_key.hex()}),flush=True)
-    while True:
+    # TCP interface startup is asynchronous. An immediate announce can be lost
+    # before the uplink exists, leaving stale paths after a service restart.
+    for _ in range(3):
+        time.sleep(2)
         server.destination.announce(app_data=b'NomadKey DEV')
+    while True:
         time.sleep(300)
+        server.destination.announce(app_data=b'NomadKey DEV')
 
 
 if __name__=='__main__': main()

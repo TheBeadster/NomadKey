@@ -27,7 +27,7 @@ Normal MeshChatX NomadNet browser code caches links and supports archives/browse
 
 The development APK has a separate package suffix `.nomadkey.dev`, a Columba DEV label, and an additional `NomadKey DEV` launcher entry. Its activity runs in a separate process and skips ordinary Columba identity initialization. It uses the reusable NomadKey wheel, python-fido2, and Android `IsoDep` transport. It does not import the usual identity. No-Sentry build; heap snapshot tooling removed. It uses native text views, no WebView, browser history, NomadNetPageCache, tab restoration or form resubmission. Leaving the view clears it and requests revocation; FLAG_SECURE prevents normal Android screenshots/recents capture, without promising protection from a compromised OS or external camera.
 
-This first client connects to a configured TCP Reticulum transport on port 444. It does not yet reuse the normal Columba BLE/LoRa interface manager. Off-LAN use therefore requires a reachable Reticulum TCP transport and a path to the service; PiMonitor's LAN-only port is not made public by this project.
+This first client connects to a configured TCP Reticulum transport with an editable port. It does not yet reuse the normal Columba BLE/LoRa interface manager. The user supplied `mh.beady.com:444`; the existing public route was verified with service discovery and unenrolled denial. No firewall/forwarding change was made by this project.
 
 ## FIDO API choices and sources
 

@@ -5,7 +5,7 @@ No item here is marked passed until observed on hardware.
 ## Android first (user currently away from PC)
 
 1. Install the separately named, checksum-verified development APK; keep normal Columba 2.3.1-beta installed.
-2. Open **NomadKey DEV**. Use a reachable Reticulum TCP uplink. On the home LAN, the documented PiMonitor hub is usable; away from home, a routed reachable transport is required. This project does not expose the LAN port to the Internet.
+2. Open **NomadKey DEV**. The user's test build presets the existing `mh.beady.com:444` transport and public service pin. Both host and port remain editable. This project did not change port forwarding or firewall configuration.
 3. Verify/pin the full service destination and public key from the trusted administration record. Confirm a wrong key/destination is rejected.
 4. Enroll Flex with UV/PIN, export only the public bundle, and have it explicitly imported through local PiMonitor administration. Repeat separately for the backup YubiKey. Do not keep retrying an incorrect PIN.
 5. Before authentication, verify the test page remains denied. Authenticate using NFC and read the synthetic page.

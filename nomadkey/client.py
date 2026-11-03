@@ -18,13 +18,20 @@ class Client:
     def connect(self):
         self.close()
         end=time.monotonic()+30
-        if not RNS.Transport.has_path(self.destination): RNS.Transport.request_path(self.destination)
+        RNS.Transport.request_path(self.destination)
         while not RNS.Transport.has_path(self.destination):
             if time.monotonic()>=end: raise TimeoutError('No Reticulum path')
             time.sleep(.1)
         self.link=RNS.Link(self.target)
+        retries=0
         while self.link.status != RNS.Link.ACTIVE:
             if time.monotonic()>=end: self.close(); raise TimeoutError('Link failed')
+            if self.link.status==RNS.Link.CLOSED:
+                if retries>=1: self.close(); raise ConnectionError('Link failed; retry after route recovery')
+                retries+=1
+                RNS.Transport.request_path(self.destination)
+                time.sleep(1)
+                self.link=RNS.Link(self.target)
             time.sleep(.1)
         self.link.identify(self.identity)
 

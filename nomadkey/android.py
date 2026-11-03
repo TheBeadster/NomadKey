@@ -2,6 +2,7 @@
 import json
 import re
 import time
+import threading
 from pathlib import Path
 import RNS
 from .client import Client
@@ -11,18 +12,21 @@ from .native import authenticate, enroll
 client=None
 stack=None
 stack_host=None
+ceremony_cancel=threading.Event()
 
 
-def configure(root,host,destination,public_key):
+def configure(root,host,port,destination,public_key):
     global client,stack,stack_host
     if not re.fullmatch(r'[A-Za-z0-9.-]{1,253}',host): raise ValueError('Invalid transport host')
+    port=int(port)
+    if not 1<=port<=65535: raise ValueError('Invalid transport port')
     if client: client.forget()
     client=Client(destination.strip().lower(),public_key.strip().lower())
-    if stack and stack_host!=host: raise ValueError('Restart app to change transport host')
+    if stack and stack_host!=(host,port): raise ValueError('Restart app to change transport host')
     if not stack:
         config=Path(root)/'nomadkey-rns'; config.mkdir(parents=True,exist_ok=True)
-        (config/'config').write_text('[reticulum]\n  share_instance = No\n  enable_transport = No\n[interfaces]\n  [[NomadKey test uplink]]\n    type = TCPClientInterface\n    enabled = Yes\n    target_host = '+host+'\n    target_port = 444\n')
-        stack=RNS.Reticulum(configdir=str(config),loglevel=RNS.LOG_ERROR); stack_host=host
+        (config/'config').write_text('[reticulum]\n  share_instance = No\n  enable_transport = No\n[interfaces]\n  [[NomadKey test uplink]]\n    type = TCPClientInterface\n    enabled = Yes\n    target_host = '+host+'\n    target_port = '+str(port)+'\n')
+        stack=RNS.Reticulum(configdir=str(config),loglevel=RNS.LOG_ERROR); stack_host=(host,port)
     return 'Service pin checked; temporary client identity created.'
 
 
@@ -35,12 +39,18 @@ def nfc(bridge,pin,operation):
     device=AndroidNfcDevice(bridge)
     try:
         if operation=='enroll':
-            return json.dumps(enroll(device,client.public_key,client.destination,pin))
+            return json.dumps(enroll(device,client.public_key,client.destination,pin,ceremony_cancel))
         if operation!='authenticate': raise ValueError('Invalid operation')
-        return json.dumps(authenticate(client,device,pin))
+        return json.dumps(authenticate(client,device,pin,ceremony_cancel))
     finally: device.close()
 
 
 def read(): return client.read().decode('utf-8',errors='replace')
 def remaining(): return max(0,client.deadline-time.monotonic()) if client else 0
-def forget(): return json.dumps(client.forget()) if client else json.dumps({'local_state_cleared':True,'remote_revocation_acknowledged':False})
+def prepare():
+    global ceremony_cancel
+    ceremony_cancel=threading.Event()
+
+def forget():
+    ceremony_cancel.set()
+    return json.dumps(client.forget()) if client else json.dumps({'local_state_cleared':True,'remote_revocation_acknowledged':False})
