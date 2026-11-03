@@ -60,6 +60,7 @@ class NomadKeyActivity : Activity(), NfcAdapter.ReaderCallback {
         page=text("").apply { isSaveEnabled=false; setTextIsSelectable(false) }
         fun button(label: String, action: () -> Unit) { layout.addView(Button(this).apply { text=label; setOnClickListener { action() } }) }
         button("Verify pin and connect") {
+            generation++; page.text=""; expiresAt=0; publicBundle=null
             val h=host.text.toString().trim(); val p=port.text.toString().trim(); val d=destination.text.toString().trim(); val k=serviceKey.text.toString().trim()
             job {
                 if (!Python.isStarted()) Python.start(AndroidPlatform(this))
