@@ -1,0 +1,29 @@
+[Unit]
+Description=NomadKey isolated development service
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=simple
+User=dadmin
+Group=dadmin
+WorkingDirectory=/home/dadmin/nomadkey-dev/source
+ExecStart=/home/dadmin/nomadkey-dev/venv/bin/python -m nomadkey.server --state /home/dadmin/nomadkey-dev/state --rnsconfig /home/dadmin/nomadkey-dev/rns --content /home/dadmin/nomadkey-dev/source/test-content --manifest /home/dadmin/nomadkey-dev/source/test-content/routes.json
+Restart=on-failure
+RestartSec=5
+UMask=0077
+NoNewPrivileges=true
+ProtectSystem=strict
+ProtectHome=read-only
+ReadWritePaths=/home/dadmin/nomadkey-dev/state /home/dadmin/nomadkey-dev/rns
+PrivateTmp=true
+PrivateDevices=true
+RestrictSUIDSGID=true
+LockPersonality=true
+MemoryMax=256M
+TasksMax=64
+LimitNOFILE=256
+Environment=PYTHONDONTWRITEBYTECODE=1
+
+[Install]
+WantedBy=multi-user.target

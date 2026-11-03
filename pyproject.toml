@@ -1,0 +1,24 @@
+[build-system]
+requires = ["setuptools>=69"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "nomadkey"
+version = "0.1.0.dev0"
+description = "Development session-bound FIDO2 authorization for Reticulum"
+requires-python = ">=3.11"
+dependencies = ["fido2==2.2.1", "rns>=1.5.2,<=1.5.7"]
+
+[project.optional-dependencies]
+pc = ["pyscard==2.3.2"]
+test = ["pytest==9.2.0"]
+
+[project.scripts]
+nomadkey-server = "nomadkey.server:main"
+nomadkey = "nomadkey.cli:main"
+
+[tool.setuptools.packages.find]
+include = ["nomadkey*"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]

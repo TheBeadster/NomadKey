@@ -1,0 +1,10 @@
+[reticulum]
+  share_instance = No
+  enable_transport = No
+
+[interfaces]
+  [[Existing local Reticulum hub]]
+    type = TCPClientInterface
+    enabled = Yes
+    target_host = 127.0.0.1
+    target_port = 444
