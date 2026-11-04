@@ -102,6 +102,13 @@ class Server:
     @staticmethod
     def login_page(message='Authentication is required to read this site.'):
         return ('#!nomadkey-v1 public\n#!c=0\n>PiMonitor private site\n\n'+message+
+                '\n\n>Columba upgrade required\n'
+                'FIDO2 login needs the NomadKey-enabled Columba development build (dev4 or newer).\n'
+                'Download and installation instructions - open in your web browser:\n'
+                'https://github.com/TheBeadster/NomadKey\n'
+                'https://github.com/TheBeadster/NomadKey/releases\n'
+                'Install the update over Columba NomadKey DEV. Existing enrolled keys do not need enrolling again.\n'
+                'New users: the site administrator must enrol your key and grant access. Installing the app alone does not grant access.\n'
                 '\n\nOpen the fingerprint menu and choose Authenticate with NFC key.\n'
                 'Verify the full service address, then use your enrolled Flex or YubiKey.\n'
                 'Access lasts five minutes. Browsing never extends it.\n\n'

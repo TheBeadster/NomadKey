@@ -57,6 +57,9 @@ def test_public_login_and_authenticated_same_page(site):
     assert public.startswith(b'#!nomadkey-v1 public')
     assert b'Private operational data' not in public
     assert b'Authentication is required' in public
+    assert b'Columba upgrade required' in public
+    assert b'https://github.com/TheBeadster/NomadKey/releases' in public
+    assert b'Installing the app alone does not grant access' in public
     assert decode(link.request('/page/other.mu').response)=={'error':'denied'}
     probe=json.loads(browser.operation(link,identity,'probe'))
     assert probe['service']==link.destination.hash.hex()

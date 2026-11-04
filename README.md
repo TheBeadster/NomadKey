@@ -4,6 +4,12 @@ FIDO2 authorization for short-lived access to a separate NomadNet service, using
 
 **Development build.** The user confirmed Android/Flex authentication, five-minute expiry denial and Forget me denial on 4 November 2026. YubiKey and PC hardware remain untested. Existing estate pages remain on their original service. The protected destination now serves live, read-only PiMonitor host status. Follow [status](docs/STATUS.md) for actual checks and outstanding limitations.
 
+## Android download
+
+Get the [NomadKey-enabled Columba development APK](https://github.com/TheBeadster/NomadKey/releases/tag/nomadkey-dev4) and follow the [installation and NFC instructions](docs/ANDROID_DEV4.md). Use dev4 or newer for a Flex that also stores a website. Upgrade the existing Columba NomadKey DEV app in place; existing enrolled keys remain valid. New users still need trusted administrator enrollment and permission: installing this app alone does not unlock a protected site.
+
+The backend, protocol and tests are on this branch. Columba changes are on [columba/nomadkey-development](https://github.com/TheBeadster/NomadKey/tree/columba/nomadkey-development). APKs are development builds with published checksums, not official upstream Columba releases.
+
 ## Implemented
 
 - Python FIDO2 verifier and native CTAP2 client using Yubico python-fido2.
