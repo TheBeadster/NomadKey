@@ -27,3 +27,5 @@ Windows uses `.venv\Scripts\python` and `.venv\Scripts\pip`. PC NFC additionally
 See [protocol and threat model](docs/PROTOCOL.md), [integration decisions](docs/INTEGRATION.md), [installation and rollback](docs/OPERATIONS.md), and [hardware checklist](docs/HARDWARE.md). Documentation is prepared for eventual publication; GitHub Pages is not enabled.
 
 The [dev3 Android guide](docs/ANDROID_DEV3.md) describes the normal-browser flow. The older separate development launcher remains available for trusted enrollment.
+
+[Dev4](docs/ANDROID_DEV4.md) fixes the NFC handoff when Flex also stores a website: keep reader mode until the key is removed, then return to the protected page. Background revocation remains enabled.

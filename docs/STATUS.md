@@ -1,5 +1,11 @@
 # Verification status
 
+## Dev4 NFC handoff repair
+
+The user confirmed dev3 authentication on the S24, then reported that the Flex's saved URL opened in the default browser and caused the expected background deauthentication. Dev4 retains NFC reader mode until tag removal, stages the assertion in memory until that handoff completes, and preserves background revocation. See [dev4 guide](ANDROID_DEV4.md). Physical confirmation of the removal fix remains pending.
+
+Dev4 build/signature verification passed with 98 targeted Android tests, including five mocked-NFC real-activity lifecycle checks. There was no server deployment or new physical hardware test for this client-only update.
+
 ## Dev3 normal-browser update
 
 Normal Announces -> public login page -> fingerprint menu NFC -> private page in the same browser is implemented. See [dev3 guide](ANDROID_DEV3.md). The prior separate-view/TCP-only descriptions below refer to older builds. Dev3 uses the normal Python Reticulum backend and configured transport; non-TCP interfaces have not been physically tested.
