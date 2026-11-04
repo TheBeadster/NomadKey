@@ -111,6 +111,39 @@ class NomadNetBrowserViewModelTest {
     // ── loadPage ──
 
     @Test
+    fun `NomadKey public page bypasses disk history and restoration`() = runTest(testDispatcher) {
+        every { pageCache.get(nodeHash, any()) } returns null
+        every { pageCache.remove(nodeHash, any()) } just Runs
+        coEvery { protocol.nomadkeyOperation(nodeHash,"probe",any()) } returns Result.success("{}")
+        coEvery { protocol.nomadkeyOperation(nodeHash,"state",any()) } returns Result.success("{\"remaining\":0}")
+        coEvery { protocol.requestNomadnetPage(nodeHash,any(),any(),any()) } returns
+            Result.success(NomadnetPageResult("#!nomadkey-v1 public\n#!c=0\n>Authenticate", "/page/index.mu"))
+        viewModel.loadPage(nodeHash)
+        Thread.sleep(250)
+        advanceUntilIdle()
+        assertTrue(viewModel.nomadKeyEnabled.value)
+        assertTrue(viewModel.browserState.value is NomadNetBrowserViewModel.BrowserState.PageLoaded)
+        verify(exactly=0) { pageCache.put(any(),any(),any(),any()) }
+        coVerify(exactly=0) { settingsRepository.saveNomadNetLastNodeHash(any(),any(),any()) }
+        assertFalse(viewModel.canGoBack.value)
+    }
+
+    @Test
+    fun `NomadKey private response without live session is not displayed or cached`() = runTest(testDispatcher) {
+        every { pageCache.get(nodeHash, any()) } returns null
+        every { pageCache.remove(nodeHash, any()) } just Runs
+        coEvery { protocol.nomadkeyOperation(nodeHash,"probe",any()) } returns Result.success("{}")
+        coEvery { protocol.nomadkeyOperation(nodeHash,"state",any()) } returns Result.success("{\"remaining\":0}")
+        coEvery { protocol.requestNomadnetPage(nodeHash,any(),any(),any()) } returns
+            Result.success(NomadnetPageResult("#!nomadkey-v1 private\nSecret", "/page/index.mu"))
+        viewModel.loadPage(nodeHash)
+        Thread.sleep(250)
+        advanceUntilIdle()
+        assertTrue(viewModel.browserState.value is NomadNetBrowserViewModel.BrowserState.Error)
+        verify(exactly=0) { pageCache.put(any(),any(),any(),any()) }
+    }
+
+    @Test
     fun `loadPage with cache hit emits PageLoaded immediately`() =
         runTest(testDispatcher) {
             every { pageCache.get(nodeHash, "/page/index.mu") } returns simplePage

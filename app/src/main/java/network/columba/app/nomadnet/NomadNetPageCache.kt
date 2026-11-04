@@ -62,7 +62,8 @@ class NomadNetPageCache
                 null
             } else {
                 try {
-                    matchingFile.readText()
+                    val content=matchingFile.readText()
+                    if(content.startsWith("#!nomadkey-v1")) { matchingFile.delete(); null } else content
                 } catch (e: Exception) {
                     Log.w(TAG, "Failed to read cache file", e)
                     matchingFile.delete()
@@ -85,6 +86,7 @@ class NomadNetPageCache
             content: String,
             cacheSeconds: Int?,
         ) {
+            if(content.startsWith("#!nomadkey-v1")) { remove(nodeHash,path); return }
             val ttl = cacheSeconds ?: DEFAULT_CACHE_SECONDS
             if (ttl <= 0) return
 

@@ -17,6 +17,9 @@ import network.columba.app.rns.api.model.NomadnetPageResult
  * observable [StateFlow]s for the busy-indicator.
  */
 interface RnsNomadnet {
+    /** Native FIDO2 control on the current browser link; never a URL/form action. */
+    suspend fun nomadkeyOperation(destinationHash: String, operation: String, payload: String = ""): Result<String> =
+        Result.failure(UnsupportedOperationException("FIDO2 requires the Python backend"))
     /**
      * Request a NomadNet page or file from a destination.
      *

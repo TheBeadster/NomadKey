@@ -101,7 +101,7 @@ chaquopy {
         pip {
             install("fido2==2.2.1")
             // Reusable external NomadKey SDK. No new Columba Python facade.
-            install(rootProject.file("vendor/nomadkey-0.1.0.dev1-py3-none-any.whl").absolutePath)
+            install(rootProject.file("vendor/nomadkey-0.1.0.dev3-py3-none-any.whl").absolutePath)
             // Upstream RNS 1.5.2 — torlando-tech fork pinned to commit SHA
             // (patches/columba-ios-1.5.2, identical hardening patch set to the
             // former 1.4.2 pin: socket cleanup, PHY-stats RPC backoff, ratchet

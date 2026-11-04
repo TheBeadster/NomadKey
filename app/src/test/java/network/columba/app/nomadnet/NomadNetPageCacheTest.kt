@@ -38,6 +38,25 @@ class NomadNetPageCacheTest {
     // ── Basic put/get ──
 
     @Test
+    fun `NomadKey content cannot be persisted even with a positive TTL`() {
+        cache.put("protected", "/page/index.mu", "old public page", 3600)
+        cache.put("protected", "/page/index.mu", "#!nomadkey-v1 private\nPrivate marker", 3600)
+        assertNull(cache.get("protected", "/page/index.mu"))
+        val files=java.io.File(context.cacheDir,"nomadnet_pages").listFiles().orEmpty()
+        assertTrue(files.none { it.readText().contains("Private marker") })
+    }
+
+    @Test
+    fun `NomadKey content from a legacy cache is removed rather than restored`() {
+        cache.put("protected", "/page/index.mu", "old public page", 3600)
+        val files=java.io.File(context.cacheDir,"nomadnet_pages").listFiles().orEmpty()
+        assertEquals(1,files.size)
+        files.single().writeText("#!nomadkey-v1 private\nPrivate marker")
+        assertNull(cache.get("protected", "/page/index.mu"))
+        assertTrue(!files.single().exists())
+    }
+
+    @Test
     fun `put and get returns cached content`() {
         cache.put("abc123", "/page/index.mu", "Hello World", cacheSeconds = 3600)
         val result = cache.get("abc123", "/page/index.mu")

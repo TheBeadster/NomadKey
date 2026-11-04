@@ -46,6 +46,127 @@ class NomadNetBrowserViewModel
         private val settingsRepository: SettingsRepository,
         private val rnsCore: RnsCore,
     ) : ViewModel() {
+        private val nomadKeyNodes = java.util.concurrent.ConcurrentHashMap.newKeySet<String>()
+        private val _nomadKeyEnabled = MutableStateFlow(false)
+        val nomadKeyEnabled: StateFlow<Boolean> = _nomadKeyEnabled.asStateFlow()
+        private val _nomadKeyRemaining = MutableStateFlow(0L)
+        val nomadKeyRemaining: StateFlow<Long> = _nomadKeyRemaining.asStateFlow()
+        private val _nomadKeyMessage = MutableStateFlow("")
+        val nomadKeyMessage: StateFlow<String> = _nomadKeyMessage.asStateFlow()
+        @Volatile private var nomadKeyDeadline = 0L
+        @Volatile var nomadKeyNfcPending = false
+            private set
+        private var ceremonyNode = ""
+        private var statePoll = false
+        private var nomadKeyMonitor: kotlinx.coroutines.Job? = null
+
+        private fun startNomadKeyMonitor() {
+            if(nomadKeyMonitor?.isActive==true) return
+            nomadKeyMonitor=viewModelScope.launch {
+                while(nomadKeyDeadline>0) {
+                    kotlinx.coroutines.delay(250)
+                    val remaining=((nomadKeyDeadline-android.os.SystemClock.elapsedRealtime()).coerceAtLeast(0)+999)/1000
+                    _nomadKeyRemaining.value=remaining
+                    if(nomadKeyDeadline>0 && remaining==0L) forgetNomadKey("Session expired")
+                    if(remaining>0 && !statePoll) {
+                        statePoll=true
+                        val node=currentNodeHash
+                        viewModelScope.launch(Dispatchers.IO) {
+                            try {
+                                val state=org.json.JSONObject(nomadnet.nomadkeyOperation(node,"state").getOrThrow())
+                                if(state.getDouble("remaining")<=0 && currentNodeHash==node) forgetNomadKey("Connection authority ended")
+                            } catch(_:Exception) { if(currentNodeHash==node) forgetNomadKey("Connection lost") }
+                            finally { kotlinx.coroutines.delay(1000);statePoll=false }
+                        }
+                    }
+                }
+            }
+        }
+
+        fun beginNomadKey(pin: String, ready: () -> Unit) {
+            if(nomadKeyNfcPending || currentNodeHash !in nomadKeyNodes) return
+            ceremonyNode=currentNodeHash; nomadKeyNfcPending=true
+            _browserState.value=BrowserState.Loading("Preparing NFC authentication…")
+            _nomadKeyMessage.value="Preparing NFC authentication…"
+            val node=ceremonyNode
+            viewModelScope.launch(Dispatchers.IO) {
+                try {
+                    val request=nomadnet.nomadkeyOperation(node,"begin").getOrThrow()
+                    if(!nomadKeyNfcPending || currentNodeHash!=node) return@launch
+                    network.columba.app.rns.api.NomadKeyCeremony.prepare(request,pin)
+                    kotlinx.coroutines.withContext(Dispatchers.Main) { ready() }
+                } catch(_:Exception) {
+                    nomadKeyNfcPending=false
+                    network.columba.app.rns.api.NomadKeyCeremony.clear()
+                    forgetNomadKey("Authentication unavailable; reopen the fingerprint menu to retry")
+                }
+            }
+        }
+
+        fun finishNomadKey(success: Boolean) {
+            val response=network.columba.app.rns.api.NomadKeyCeremony.takeResponse()
+            network.columba.app.rns.api.NomadKeyCeremony.clear()
+            nomadKeyNfcPending=false
+            if(!success || response==null || currentNodeHash!=ceremonyNode) {
+                forgetNomadKey("NFC authentication cancelled or failed; no automatic PIN retry")
+                return
+            }
+            val node=ceremonyNode
+            val epoch=++fetchEpoch
+            viewModelScope.launch(Dispatchers.IO) {
+                try {
+                    val value=org.json.JSONObject(nomadnet.nomadkeyOperation(node,"complete",response).getOrThrow())
+                    check(value.optBoolean("ok"))
+                    val state=org.json.JSONObject(nomadnet.nomadkeyOperation(node,"state").getOrThrow())
+                    val millis=(state.getDouble("remaining")*1000).toLong()
+                    check(millis>0 && fetchEpoch==epoch && currentNodeHash==node)
+                    nomadKeyDeadline=android.os.SystemClock.elapsedRealtime()+millis
+                    startNomadKeyMonitor()
+                    _nomadKeyMessage.value="Authenticated. Browsing does not extend access."
+                    loadPage(node,DEFAULT_PATH)
+                } catch(_:Exception) { forgetNomadKey("Authentication failed") }
+            }
+        }
+
+        fun forgetNomadKey(reason: String = "Forgotten") {
+            val node=currentNodeHash
+            if(node !in nomadKeyNodes) return
+            nomadKeyDeadline=0; _nomadKeyRemaining.value=0; nomadKeyNfcPending=false
+            network.columba.app.rns.api.NomadKeyCeremony.clear()
+            val revokeEpoch=++fetchEpoch; history.clear(); _canGoBack.value=false; _formFields.value=emptyMap()
+            partialManager.clear(); pageImageLoader.clear(); _downloadState.value=DownloadState()
+            _browserState.value=BrowserState.Error("$reason. Protected view cleared.")
+            _nomadKeyMessage.value="Remote revocation pending…"
+            viewModelScope.launch(Dispatchers.IO) {
+                val acknowledged=runCatching {
+                    org.json.JSONObject(nomadnet.nomadkeyOperation(node,"forget").getOrThrow()).optBoolean("remote_revocation_acknowledged")
+                }.getOrDefault(false)
+                _nomadKeyMessage.value=if(acknowledged) "$reason: server acknowledged revocation." else "$reason: local view cleared; remote revocation not acknowledged. Absolute expiry still applies."
+                if(currentNodeHash==node && fetchEpoch==revokeEpoch) loadPage(node,DEFAULT_PATH)
+            }
+        }
+
+        fun nomadKeyBackground() {
+            if(currentNodeHash in nomadKeyNodes && !nomadKeyNfcPending) forgetNomadKey("Left protected site")
+        }
+
+        private suspend fun acceptNomadKeyPage(node: String, content: String): Boolean {
+            if(!content.startsWith("#!nomadkey-v1") && node !in nomadKeyNodes) return true
+            nomadKeyNodes.add(node); _nomadKeyEnabled.value=true
+            pageCache.remove(node,DEFAULT_PATH)
+            return try {
+                nomadnet.nomadkeyOperation(node,"probe").getOrThrow()
+                val state=org.json.JSONObject(nomadnet.nomadkeyOperation(node,"state").getOrThrow())
+                val remaining=(state.getDouble("remaining")*1000).toLong()
+                val proposed=android.os.SystemClock.elapsedRealtime()+remaining
+                if(remaining>0) {
+                    nomadKeyDeadline=if(nomadKeyDeadline>0) minOf(nomadKeyDeadline,proposed) else proposed
+                    startNomadKeyMonitor()
+                }
+                else nomadKeyDeadline=0
+                if(content.startsWith("#!nomadkey-v1 private") && remaining<=0) false else true
+            } catch(_:Exception) { nomadKeyDeadline=0; _nomadKeyRemaining.value=0; false }
+        }
         companion object {
             private const val TAG = "NomadNetBrowserVM"
             private const val DEFAULT_PATH = "/page/index.mu"
@@ -481,6 +602,8 @@ class NomadNetBrowserViewModel
             destinationHash: String,
             path: String = DEFAULT_PATH,
         ) {
+            if(currentNodeHash in nomadKeyNodes && destinationHash!=currentNodeHash) nomadKeyBackground()
+            _nomadKeyEnabled.value=destinationHash in nomadKeyNodes
             partialManager.clear()
             if (destinationHash != currentNodeHash) {
                 _isIdentified.value = false
@@ -523,7 +646,7 @@ class NomadNetBrowserViewModel
             // the cache is served (possibly anonymous); the backend's
             // identifyIfFlagged fires on the next fetch (any navigation or
             // refresh), which is immediate for a user interacting with the page.
-            val bypassCache = destinationHash in _autoIdentifyNodes.value
+            val bypassCache = destinationHash in _autoIdentifyNodes.value || destinationHash in nomadKeyNodes
             val cached = if (bypassCache) null else pageCache.get(destinationHash, requestPath)
             if (cached != null) {
                 fetchEpoch++ // Invalidate any in-flight request
@@ -569,8 +692,17 @@ class NomadNetBrowserViewModel
 
             // Resolve destination URL using shared utility
             val (nodeHash, path) = PartialManager.resolveNomadNetUrl(destination, currentNodeHash)
+            if(currentNodeHash in nomadKeyNodes && nodeHash==currentNodeHash && path=="/page/forget.mu") {
+                forgetNomadKey(); return
+            }
+            if(nodeHash in nomadKeyNodes && (formDataJson!=null || !path.startsWith("/page/"))) {
+                _nomadKeyMessage.value="Forms and downloads are disabled for protected pages."; return
+            }
 
             if (nodeHash != currentNodeHash) {
+                nomadKeyBackground()
+                currentNodeHash=nodeHash
+                _nomadKeyEnabled.value=nodeHash in nomadKeyNodes
                 _isIdentified.value = false
                 // New node: drop a pending post-identification refresh scoped to
                 // the previous node so it can't cause a spurious re-fetch.
@@ -590,7 +722,7 @@ class NomadNetBrowserViewModel
                 // and the fresh fetch establishes/reuses the link so the backend
                 // identifies at link establishment and the node serves identified
                 // content.
-                val bypassCache = nodeHash in _autoIdentifyNodes.value
+                val bypassCache = nodeHash in _autoIdentifyNodes.value || nodeHash in nomadKeyNodes
                 val cached = if (bypassCache) null else pageCache.get(nodeHash, path)
                 if (cached != null) {
                     fetchEpoch++ // Invalidate any in-flight request
@@ -611,6 +743,7 @@ class NomadNetBrowserViewModel
             formDataJson: String,
             fieldTokens: List<String> = emptyList(),
         ) {
+            if(nodeHash in nomadKeyNodes) { _nomadKeyMessage.value="Forms disabled for protected pages."; return }
             val epoch = ++fetchEpoch
             // Same single-flight hygiene as fetchPage: a form submission is a
             // new page request over the shared NomadNet link, so cancel any
@@ -665,6 +798,7 @@ class NomadNetBrowserViewModel
             nodeHash: String,
             path: String,
         ) {
+            if(nodeHash in nomadKeyNodes) { _nomadKeyMessage.value="Protected downloads are disabled."; return }
             val downloadEpoch = ++fetchEpoch
             stopStatusCollection()
             startProgressCollection(downloadEpoch)
@@ -779,6 +913,7 @@ class NomadNetBrowserViewModel
          * of this site), drop in-memory history, and reset the view state.
          */
         fun closeSite() {
+            nomadKeyBackground()
             // Invalidate any in-flight request so its result doesn't repopulate
             // the view after we reset to Initial.
             fetchEpoch++
@@ -973,6 +1108,12 @@ class NomadNetBrowserViewModel
 
         override fun onCleared() {
             super.onCleared()
+            val protectedNode=currentNodeHash.takeIf { it in nomadKeyNodes }
+            nomadKeyDeadline=0
+            network.columba.app.rns.api.NomadKeyCeremony.clear()
+            history.clear()
+            _formFields.value=emptyMap()
+            _browserState.value=BrowserState.Initial
             stopStatusCollection()
             stopProgressCollection()
             pageImageLoader.cancelAll()
@@ -980,6 +1121,7 @@ class NomadNetBrowserViewModel
             // for up to PAGE_TIMEOUT_SECONDS after the user navigates away.
             // Use NonCancellable because viewModelScope is already cancelled at this point.
             CoroutineScope(Dispatchers.IO + NonCancellable).launch {
+                if(protectedNode!=null) runCatching { nomadnet.nomadkeyOperation(protectedNode,"forget") }
                 try {
                     nomadnet.cancelNomadnetPageRequest()
                 } catch (_: Exception) {
@@ -990,6 +1132,7 @@ class NomadNetBrowserViewModel
 
         /** Push the current page onto the history stack for back-navigation. */
         private fun pushCurrentPageToHistory() {
+            if(currentNodeHash in nomadKeyNodes) return
             val currentState = _browserState.value
             if (currentState is BrowserState.PageLoaded) {
                 // Evict oldest entry if at capacity to bound memory usage
@@ -1051,6 +1194,7 @@ class NomadNetBrowserViewModel
                     nodeHash = nodeHash,
                     fieldTokens = fieldTokens,
                 )
+            if(nodeHash in nomadKeyNodes) return // No persisted restoration, forms, image cache or partial requests.
             // Remember where the user is so the bottom-nav NomadNet tab can
             // reopen the exact page the user left on (node + deep path) instead
             // of a cold default. Guarded: if the user hit Close Site while this
@@ -1245,8 +1389,13 @@ class NomadNetBrowserViewModel
                                     )
                             } else {
                                 currentNodeHash = nodeHash
+                                if(!acceptNomadKeyPage(nodeHash,pageResult.content)) {
+                                    _browserState.value=BrowserState.Error("Session unavailable. Reopen the site and authenticate.")
+                                    return@fold
+                                }
+                                if(fetchEpoch!=epoch) return@fold
                                 val document = MicronParser.parse(pageResult.content)
-                                if (cacheResponse) {
+                                if (cacheResponse && nodeHash !in nomadKeyNodes) {
                                     pageCache.put(nodeHash, pageResult.path, pageResult.content, document.cacheTime)
                                 }
                                 emitPageLoaded(document, pageResult.path, nodeHash)

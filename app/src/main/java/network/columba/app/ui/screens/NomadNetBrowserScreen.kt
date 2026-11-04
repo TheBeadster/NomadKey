@@ -1,6 +1,17 @@
 package network.columba.app.ui.screens
 
 import android.content.Intent
+import android.app.Activity
+import android.view.WindowManager
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.contract.ActivityResultContracts
+import androidx.compose.runtime.DisposableEffect
+import androidx.lifecycle.Lifecycle
+import androidx.lifecycle.LifecycleEventObserver
+import androidx.lifecycle.compose.LocalLifecycleOwner
+import androidx.compose.material3.OutlinedTextField
+import androidx.compose.material3.Checkbox
+import androidx.compose.ui.text.input.PasswordVisualTransformation
 import android.webkit.MimeTypeMap
 import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.background
@@ -142,11 +153,59 @@ fun NomadNetBrowserScreen(
     val coroutineScope = rememberCoroutineScope()
 
     val context = LocalContext.current
-    val privatePagesIntent = remember(context) {
-        Intent().setClassName(context.packageName, "network.columba.app.rns.backend.py.NomadKeyActivity")
+    val nomadKeyEnabled by viewModel.nomadKeyEnabled.collectAsState()
+    val nomadKeyRemaining by viewModel.nomadKeyRemaining.collectAsState()
+    val nomadKeyMessage by viewModel.nomadKeyMessage.collectAsState()
+    var showNfcDialog by remember { mutableStateOf(false) }
+    var nfcPin by remember { mutableStateOf("") }
+    var serviceVerified by remember { mutableStateOf(false) }
+    val nfcLauncher=rememberLauncherForActivityResult(ActivityResultContracts.StartActivityForResult()) {
+        viewModel.finishNomadKey(it.resultCode==Activity.RESULT_OK)
     }
-    val privatePagesAvailable = remember(context) {
-        privatePagesIntent.resolveActivity(context.packageManager) != null
+    val lifecycleOwner=LocalLifecycleOwner.current
+    DisposableEffect(lifecycleOwner, nomadKeyEnabled) {
+        var owner: android.content.Context = context
+        while(owner is android.content.ContextWrapper && owner !is Activity) owner=owner.baseContext
+        val window=(owner as? Activity)?.window
+        val wasSecure=window!=null && window.attributes.flags.and(WindowManager.LayoutParams.FLAG_SECURE)!=0
+        if(nomadKeyEnabled) window?.addFlags(WindowManager.LayoutParams.FLAG_SECURE)
+        val observer=LifecycleEventObserver { _,event ->
+            if(event==Lifecycle.Event.ON_STOP) {
+                nfcPin=""; showNfcDialog=false
+                viewModel.nomadKeyBackground()
+            }
+        }
+        lifecycleOwner.lifecycle.addObserver(observer)
+        onDispose {
+            lifecycleOwner.lifecycle.removeObserver(observer)
+            if(nomadKeyEnabled) viewModel.nomadKeyBackground()
+            if(!wasSecure) window?.clearFlags(WindowManager.LayoutParams.FLAG_SECURE)
+        }
+    }
+    if(showNfcDialog) {
+        val node=(browserState as? BrowserState.PageLoaded)?.nodeHash.orEmpty()
+        androidx.compose.material3.AlertDialog(
+            onDismissRequest={showNfcDialog=false;nfcPin=""},
+            icon={Icon(Icons.Default.Fingerprint,contentDescription=null)},
+            title={Text("Authenticate with NFC key")},
+            text={Column(verticalArrangement=Arrangement.spacedBy(12.dp)) {
+                Text("Verify the full site address before using your key:")
+                Text(node,fontFamily=FontFamily.Monospace)
+                Row(verticalAlignment=Alignment.CenterVertically) {
+                    Checkbox(checked=serviceVerified,onCheckedChange={serviceVerified=it})
+                    Text("I recognise and trust this site")
+                }
+                OutlinedTextField(value=nfcPin,onValueChange={nfcPin=it},label={Text("FIDO2 PIN")},singleLine=true,keyboardOptions=KeyboardOptions(keyboardType=androidx.compose.ui.text.input.KeyboardType.Password,autoCorrectEnabled=false),visualTransformation=PasswordVisualTransformation())
+                Text("Use your enrolled Flex or YubiKey. Access lasts five minutes; browsing never extends it.")
+            }},
+            confirmButton={TextButton(enabled=serviceVerified && node.isNotEmpty(),onClick={
+                val value=nfcPin;nfcPin="";showNfcDialog=false
+                viewModel.beginNomadKey(value) {
+                    nfcLauncher.launch(Intent().setClassName(context.packageName,"network.columba.app.rns.backend.py.NomadKeyNfcActivity"))
+                }
+            }) {Text("Tap NFC key")}},
+            dismissButton={TextButton(onClick={showNfcDialog=false;nfcPin=""}) {Text("Cancel")}},
+        )
     }
     val clipboardManager = LocalClipboardManager.current
     val focusManager = LocalFocusManager.current
@@ -248,6 +307,14 @@ fun NomadNetBrowserScreen(
             },
             text = {
                 Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
+                    if(nomadKeyEnabled) {
+                        TextButton(onClick={showIdentifyConfirm=false;serviceVerified=false;showNfcDialog=true}) {
+                            Icon(Icons.Default.Fingerprint,contentDescription=null)
+                            Text("Authenticate with NFC key")
+                        }
+                        Text("Normal identification alone does not unlock this site.")
+                        HorizontalDivider()
+                    }
                     Text(
                         if (isIdentified) {
                             stringResource(R.string.nomadnet_identify_dialog_body_identified)
@@ -318,6 +385,15 @@ fun NomadNetBrowserScreen(
     }
 
     Scaffold(
+        bottomBar = {
+            if(nomadKeyEnabled) Column(Modifier.fillMaxWidth().background(MaterialTheme.colorScheme.surface).padding(12.dp)) {
+                Row(Modifier.fillMaxWidth(),verticalAlignment=Alignment.CenterVertically,horizontalArrangement=Arrangement.SpaceBetween) {
+                    Text(if(nomadKeyRemaining>0) "Access ${nomadKeyRemaining/60}:${(nomadKeyRemaining%60).toString().padStart(2,'0')}" else "Authentication required")
+                    TextButton(onClick={viewModel.forgetNomadKey()}) { Text("Forget me") }
+                }
+                if(nomadKeyMessage.isNotBlank()) Text(nomadKeyMessage,style=MaterialTheme.typography.bodySmall)
+            }
+        },
         // The outer Scaffold in MainActivity ignores innerPadding, so the NavHost
         // (and this screen) extends behind the app's bottom NavigationBar.
         // 80dp = Material3 NavigationBar height with labeled items, matching the
@@ -456,21 +532,11 @@ fun NomadNetBrowserScreen(
                             onDismissRequest = { showMenu = false },
                         ) {
                             // Copy URL — derive from compose state
-                            if (privatePagesAvailable) {
-                                DropdownMenuItem(
-                                    text = { Text("Private pages · NomadKey") },
-                                    onClick = {
-                                        showMenu = false
-                                        context.startActivity(privatePagesIntent)
-                                    },
-                                )
-                                HorizontalDivider()
-                            }
                             val shareableUrl =
                                 (browserState as? BrowserState.PageLoaded)?.let {
                                     "nomadnetwork://${it.nodeHash}:${buildNomadNetPersistPath(it.path, it.fieldTokens)}"
                                 }
-                            if (shareableUrl != null) {
+                            if (shareableUrl != null && !nomadKeyEnabled) {
                                 DropdownMenuItem(
                                     text = { Text("Copy URL") },
                                     onClick = {
@@ -702,15 +768,6 @@ fun NomadNetBrowserScreen(
                             Spacer(modifier = Modifier.height(12.dp))
                             Button(onClick = submitHomeUrl) {
                                 Text("Go")
-                            }
-                            if (privatePagesAvailable) {
-                                Spacer(modifier = Modifier.height(16.dp))
-                                Button(onClick = { context.startActivity(privatePagesIntent) }) {
-                                    Icon(Icons.Default.Fingerprint, contentDescription = null)
-                                    Spacer(modifier = Modifier.width(8.dp))
-                                    Text("Private pages · NomadKey")
-                                }
-                                Text("Use your NFC key for temporary access.", style = MaterialTheme.typography.bodySmall)
                             }
                         }
                     }

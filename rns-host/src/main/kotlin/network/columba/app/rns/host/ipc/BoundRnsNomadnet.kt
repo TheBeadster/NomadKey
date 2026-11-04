@@ -22,6 +22,8 @@ internal class BoundRnsNomadnet(
     private val backendFlow: StateFlow<RnsBackend?>,
     scope: CoroutineScope,
 ) : RnsNomadnet {
+    override suspend fun nomadkeyOperation(destinationHash: String, operation: String, payload: String): Result<String> =
+        awaitBound().nomadnet.nomadkeyOperation(destinationHash, operation, payload)
     private suspend fun awaitBound(): RnsBackend = backendFlow.filterNotNull().first()
 
     override suspend fun requestNomadnetPage(

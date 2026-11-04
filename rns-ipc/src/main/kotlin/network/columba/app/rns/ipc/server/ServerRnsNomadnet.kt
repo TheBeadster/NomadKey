@@ -16,6 +16,10 @@ internal class ServerRnsNomadnet(
     private val impl: RnsNomadnet,
     private val scope: CoroutineScope,
 ) : IRnsNomadnet.Stub() {
+    override fun nomadkeyOperation(destinationHash: String, operation: String, payload: String, cb: IRnsResultCallback) = dispatch(cb, scope) {
+        val value = impl.nomadkeyOperation(destinationHash, operation, payload).getOrThrow()
+        Bundle().apply { putString("nomadkey", value) }
+    }
     private val statusHub = ObserverHub<String, IRnsStringEventCallback>(
         scope = scope,
         upstream = { impl.nomadnetRequestStatusFlow },

@@ -24,6 +24,10 @@ internal class ClientRnsNomadnet(
     private val remote: IRnsNomadnet,
     private val scope: CoroutineScope,
 ) : RnsNomadnet {
+    override suspend fun nomadkeyOperation(destinationHash: String, operation: String, payload: String): Result<String> = runCatching {
+        val result = awaitResult { cb -> remote.nomadkeyOperation(destinationHash, operation, payload, cb) }
+        result.getString("nomadkey") ?: error("No authentication response")
+    }
     override suspend fun requestNomadnetPage(
         destinationHash: String,
         path: String,

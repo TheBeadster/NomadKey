@@ -46,6 +46,18 @@ import java.util.concurrent.ConcurrentHashMap
 class PythonRnsNomadnet(
     private val runtime: PythonRnsRuntime,
 ) : RnsNomadnet {
+    private val nomadKeyNodes = java.util.concurrent.ConcurrentHashMap.newKeySet<String>()
+    override suspend fun nomadkeyOperation(destinationHash: String, operation: String, payload: String): Result<String> = pyResult {
+        runtime.requireRunning()
+        require(operation in setOf("probe", "begin", "complete", "forget", "state") && payload.length <= 16384)
+        val link = nomadnetLinks[destinationHash] ?: error("Open the site first")
+        require(linkStatus(link) == LINK_ACTIVE) { "Connection closed; authenticate again" }
+        val identity = runtime.localIdentity ?: error("Client identity unavailable")
+        val result = com.chaquo.python.Python.getInstance().getModule("nomadkey.browser")
+            .callAttr("operation", link, identity, operation, payload).toString()
+        if(operation=="probe") nomadKeyNodes.add(destinationHash)
+        result
+    }
     private companion object {
         const val TAG = "PythonRnsNomadnet"
 
@@ -227,6 +239,7 @@ class PythonRnsNomadnet(
             // ~2.3x `timeoutSeconds`).
             val requestDeadlineMs = System.currentTimeMillis() + (timeoutSeconds * 1000).toLong()
 
+            if(destinationHash in nomadKeyNodes) require(path.startsWith("/page/") && formDataJson==null) { "Protected forms and downloads disabled" }
             val safePath = if (path.isBlank() || !path.startsWith("/")) DEFAULT_PATH else path
             val destBytes = destinationHash.hexToBytes()
 
@@ -713,6 +726,7 @@ class PythonRnsNomadnet(
         maxBytes: Long,
     ): Result<NomadnetMediaResult> =
         pyResult {
+            require(destinationHash !in nomadKeyNodes) { "Protected media caching disabled" }
             runtime.requireRunning()
             val generation = beginRequest()
             _nomadnetRequestStatusFlow.value = "requesting"

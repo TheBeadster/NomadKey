@@ -13,6 +13,7 @@ import network.columba.app.rns.ipc.callback.IRnsStringCallback;
 import network.columba.app.rns.ipc.callback.IRnsStringEventCallback;
 
 oneway interface IRnsNomadnet {
+    void nomadkeyOperation(String destinationHash, String operation, String payload, in IRnsResultCallback cb);
     void requestNomadnetPage(
         String destinationHash,
         String path,
