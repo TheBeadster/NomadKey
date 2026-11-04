@@ -8,7 +8,6 @@ import android.os.Looper
 import android.widget.Button
 import io.mockk.*
 import network.columba.app.rns.api.NomadKeyCeremony
-import network.columba.app.rns.backend.py.NomadKeyNfcActivity
 import org.junit.After
 import org.junit.Before
 import org.junit.Test
@@ -27,8 +26,10 @@ import java.time.Duration
 class NomadKeyNfcHandoffTest {
     private val adapter = mockk<NfcAdapter>(relaxed = true)
     private val listener = slot<NfcAdapter.OnTagRemovedListener>()
-    private lateinit var controller: ActivityController<NomadKeyNfcActivity>
-    private lateinit var activity: NomadKeyNfcActivity
+    private lateinit var controller: ActivityController<Activity>
+    private lateinit var activity: Activity
+    @Suppress("UNCHECKED_CAST")
+    private val activityType = Class.forName("network.columba.app.rns.backend.py.NomadKeyNfcActivity") as Class<Activity>
     private var generation = 0L
 
     @Before fun setup() {
@@ -37,14 +38,14 @@ class NomadKeyNfcHandoffTest {
         every { adapter.isEnabled } returns true
         every { adapter.ignore(any(), 1000, capture(listener), any()) } returns true
         NomadKeyCeremony.prepare("software-request", "software-pin")
-        controller = Robolectric.buildActivity(NomadKeyNfcActivity::class.java).create().start().resume()
+        controller = Robolectric.buildActivity(activityType).create().start().resume()
         activity = controller.get()
-        val field = NomadKeyNfcActivity::class.java.getDeclaredField("input").apply { isAccessible = true }
+        val field = activityType.getDeclaredField("input").apply { isAccessible = true }
         generation = (field.get(activity) as NomadKeyCeremony.Input).generation
     }
 
     private fun keyRead(assertion: String? = "software-assertion") {
-        val method = NomadKeyNfcActivity::class.java.getDeclaredMethod(
+        val method = activityType.getDeclaredMethod(
             "awaitTagRemoval", Tag::class.java, java.lang.Long.TYPE, String::class.java,
         ).apply { isAccessible = true }
         method.invoke(activity, mockk<Tag>(), generation, assertion)
@@ -91,7 +92,7 @@ class NomadKeyNfcHandoffTest {
         keyRead()
         assertFalse(activity.isFinishing)
         assertNull(NomadKeyCeremony.takeResponse())
-        val field = NomadKeyNfcActivity::class.java.getDeclaredField("continueButton").apply { isAccessible = true }
+        val field = activityType.getDeclaredField("continueButton").apply { isAccessible = true }
         (field.get(activity) as Button).performClick()
         assertEquals(Activity.RESULT_OK, shadowOf(activity).resultCode)
         assertEquals("software-assertion", NomadKeyCeremony.takeResponse())
