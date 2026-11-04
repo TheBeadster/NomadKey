@@ -1,5 +1,15 @@
 # Verification status
 
+## 4 November 2026 update
+
+- User-reported physical Android/Flex result: enrolled through the app, opened the synthetic protected page, then confirmed denial after both timeout and Forget me. This is the user's observed hardware result, not an automated hardware test. One public credential was imported with pages:read only; no authenticator private key is held by the server.
+- Dev2 adds a Private pages entry to Columba's NomadNet home and overflow menu. Its protected view shows a countdown and loads the page immediately after authentication. It continues to use an isolated temporary identity and memory-only content, outside the standard browser's page/image caches.
+- PiMonitor now serves a read-only live host snapshot (UTC sample time, process/host uptime, CPU load, memory and disk availability) at the same protected /page/index.mu route. It is not an estate-wide health verdict. No executable pages, control actions or existing private page trees were exposed.
+- 40 tests passed on PiMonitor. Additional tests cover denied provider invocation, rejected forms/alternate routes, expiry during generation, output bounds and revocation. Real RNS software-authenticator smoke passed against the new dynamic page, including cloned-link denial, activity expiry and acknowledged Forget me.
+- Deployment preserved the exact existing credential state and service identity. Original services/process remained unchanged. The previous source and private state were backed up before the update.
+
+The older results below describe dev1; its no-human-credential audit was superseded by the authorized enrollment on 4 November.
+
 ## Software evidence
 
 - 35 Python tests passed on PiMonitor (Python 3.11), including native cancellation and POSIX file/symlink checks. Earlier Windows run: 32 passed before the final three filesystem tests.
@@ -14,11 +24,11 @@
 
 ## Not established by those results
 
-- Physical Flex/YubiKey NFC and true hardware user verification.
+- Independently instrumented physical hardware verification, backup YubiKey and PC NFC testing. Android/Flex success is user-reported above.
 - End-to-end Columba physical-device NFC authentication and authenticated-view expiry/cache inspection. See [APK build record](ANDROID_BUILD.md) for the narrower emulator results.
 - MeshChatX extension in the installed 4.8.3 UI (deferred at user request).
 - Offline Android BLE/LoRa transport integration into the new isolated activity; this version uses TCP Reticulum.
 - Existing estate-page migration, executable controls, media-rich rendering or all upstream caching paths. The prototype displays static synthetic content in its own native view.
 - Independent cryptographic/security audit, denial-of-service immunity, or erasure of previously captured information.
 
-The first Flex hardware milestone is still pending; software passes must never be presented as hardware passes.
+Software passes must never be presented as hardware passes. The user's Android/Flex report is recorded separately above; the original PC/MeshChatX milestone remains pending.

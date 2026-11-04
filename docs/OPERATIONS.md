@@ -55,6 +55,8 @@ Requires JDK 17+, Android SDK 36 and a Chaquopy-compatible Python 3.11 build hos
 
 ## Rollback
 
+Dev2 live-status page uses `/etc/systemd/system/nomadkey-dev.service.d/20-status-page.conf`, which adds `--status-page` to the original command. To return to the static test page while preserving enrollment, remove only that override, run `sudo systemctl daemon-reload`, then `sudo systemctl restart nomadkey-dev`. Restart invalidates sessions. The original content manifest is still the complete allowlist; no dynamic script execution is enabled. The host snapshot reads local OS metrics and never extends session expiry.
+
 ```sh
 sudo systemctl stop nomadkey-dev
 sudo systemctl disable nomadkey-dev  # harmless if never enabled

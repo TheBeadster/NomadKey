@@ -2,7 +2,7 @@
 
 FIDO2 authorization for short-lived access to a separate NomadNet service, using replaceable Reticulum client identities. No SMS or banking integration.
 
-**Not production-ready. No Flex, YubiKey or physical Android NFC test has passed.** Existing estate pages remain on their original service. The development destination serves only synthetic content. Follow [status](docs/STATUS.md) for actual checks and outstanding limitations.
+**Development build.** The user confirmed Android/Flex authentication, five-minute expiry denial and Forget me denial on 4 November 2026. YubiKey and PC hardware remain untested. Existing estate pages remain on their original service. The protected destination now serves live, read-only PiMonitor host status. Follow [status](docs/STATUS.md) for actual checks and outstanding limitations.
 
 ## Implemented
 

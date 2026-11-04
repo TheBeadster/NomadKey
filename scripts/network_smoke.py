@@ -20,7 +20,7 @@ store.save(state/'credentials.json',{credential.credential_id.hex():Credential(c
 (root/'client'/'config').write_text('[reticulum]\n share_instance = No\n[interfaces]\n [[test]]\n type = TCPClientInterface\n enabled = Yes\n target_host = 127.0.0.1\n target_port = 44221\n')
 repo=pathlib.Path(__file__).resolve().parents[1]
 log=(root/'server.log').open('w')
-proc=subprocess.Popen([sys.executable,'-m','nomadkey.server','--state',str(state),'--rnsconfig',str(root/'server'),'--content',str(repo/'test-content'),'--manifest',str(repo/'test-content/routes.json'),'--lifetime','3'],stdout=log,stderr=log)
+proc=subprocess.Popen([sys.executable,'-m','nomadkey.server','--state',str(state),'--rnsconfig',str(root/'server'),'--content',str(repo/'test-content'),'--manifest',str(repo/'test-content/routes.json'),'--lifetime','3'] + (['--status-page'] if '--status-page' in sys.argv else []),stdout=log,stderr=log)
 try:
     time.sleep(3)
     if proc.poll() is not None: raise RuntimeError((root/'server.log').read_text())
@@ -28,7 +28,7 @@ try:
     client=Client(dest.hex(),identity.get_public_key().hex()); client.connect()
     assert decode(client.request('/page/index.mu'))=={'error':'denied'}
     authenticate(client,device)
-    assert b'synthetic protected' in client.read()
+    assert (b'PiMonitor | Private status' if '--status-page' in sys.argv else b'synthetic protected') in client.read()
     clone=Client(dest.hex(),identity.get_public_key().hex()); clone.identity=client.identity; clone.connect()
     assert decode(clone.request('/page/index.mu'))=={'error':'denied'}
     until=time.monotonic()+3.5

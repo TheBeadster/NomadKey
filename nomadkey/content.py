@@ -6,8 +6,11 @@ from .auth import Denied
 
 class Content:
     """Explicit route manifest. No dynamic executable handlers or implicit directories."""
-    def __init__(self, auth, root, routes):
+    def __init__(self, auth, root, routes, providers=None):
         self.auth, self.root, self.routes = auth, Path(root).resolve(), routes
+        self.providers = providers or {}
+        if set(self.providers) - set(routes):
+            raise ValueError("provider must have an explicit protected route")
         for route, relative in routes.items():
             if not route.startswith(("/page/", "/file/", "/media/")) or any(x in route for x in ("..", "%", "?", "#", "\\")):
                 raise ValueError("invalid route")
@@ -30,9 +33,14 @@ class Content:
             raise Denied("forms disabled")
         if route not in self.routes:
             raise Denied("unknown route")
-        path = self._path(self.routes[route])
-        with path.open("rb") as f:
-            body = f.read(65537)
+        if route in self.providers:
+            body = self.providers[route]()
+        else:
+            path = self._path(self.routes[route])
+            with path.open("rb") as f:
+                body = f.read(65537)
+        if not isinstance(body, bytes):
+            raise Denied("invalid content")
         if len(body) > 65536:
             raise Denied("content too large")
         self.auth.require(link, client)  # do not finish a read after expiry

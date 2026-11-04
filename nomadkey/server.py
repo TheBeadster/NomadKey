@@ -13,7 +13,7 @@ from . import store
 
 
 class Server:
-    def __init__(self, state, content, routes, lifetime=300):
+    def __init__(self, state, content, routes, lifetime=300, status_page=False):
         self.state=Path(state); self.state.mkdir(mode=0o700,parents=True,exist_ok=True)
         identity_path=self.state/'service.identity'
         if identity_path.exists():
@@ -24,7 +24,9 @@ class Server:
         self.destination=RNS.Destination(identity,RNS.Destination.IN,RNS.Destination.SINGLE,'nomadnetwork','node')
         self.destination.set_max_request_size(MAX_MESSAGE)
         self.auth=Auth(identity.get_public_key(),self.destination.hash,store.load(self.state/'credentials.json'),lifetime)
-        self.content=Content(self.auth,content,routes)
+        from .status_page import StatusPage
+        providers={'/page/index.mu': StatusPage(self.state)} if status_page else None
+        self.content=Content(self.auth,content,routes,providers)
         self.links={}; self.link_times=[]; self.lock=threading.RLock()
         self.destination.set_link_established_callback(self.connected)
         for path in ['/nomadkey/discover','/nomadkey/begin','/nomadkey/complete','/nomadkey/forget',*routes]:
@@ -87,9 +89,10 @@ class Server:
 def main():
     p=argparse.ArgumentParser(); p.add_argument('--state',required=True); p.add_argument('--rnsconfig',required=True)
     p.add_argument('--content',required=True); p.add_argument('--manifest',required=True); p.add_argument('--lifetime',type=int,default=300)
+    p.add_argument('--status-page',action='store_true',help='Serve protected live host status at /page/index.mu')
     args=p.parse_args()
     RNS.Reticulum(configdir=args.rnsconfig,loglevel=RNS.LOG_ERROR)
-    server=Server(args.state,args.content,json.loads(Path(args.manifest).read_text()),args.lifetime)
+    server=Server(args.state,args.content,json.loads(Path(args.manifest).read_text()),args.lifetime,args.status_page)
     print(json.dumps({'destination':server.destination.hash.hex(),'public_key':server.auth.public_key.hex()}),flush=True)
     # TCP interface startup is asynchronous. An immediate announce can be lost
     # before the uplink exists, leaving stale paths after a service restart.
