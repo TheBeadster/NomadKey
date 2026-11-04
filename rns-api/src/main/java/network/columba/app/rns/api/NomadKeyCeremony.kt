@@ -6,14 +6,21 @@ object NomadKeyCeremony {
     private var generation = 0L
     private var input: Input? = null
     private var response: String? = null
+    private var stagedResponse: String? = null
     @Synchronized fun prepare(request: String, pin: String) {
         clear(); input = Input(request, pin, generation)
     }
     @Synchronized fun takeInput(): Input? = input.also { input = null }
-    @Synchronized fun complete(id: Long, assertion: String): Boolean {
+    /** A key read is not yet a result: keep it private until the NFC handoff ends. */
+    @Synchronized fun stageResponse(id: Long, assertion: String): Boolean {
+        if(id != generation || stagedResponse != null || response != null) return false
+        stagedResponse = assertion; return true
+    }
+    @Synchronized fun tagRemoved(id: Long): Boolean {
         if(id != generation) return false
-        response = assertion; return true
+        val staged = stagedResponse ?: return false
+        stagedResponse = null; response = staged; return true
     }
     @Synchronized fun takeResponse(): String? = response.also { response = null }
-    @Synchronized fun clear() { generation++; input = null; response = null }
+    @Synchronized fun clear() { generation++; input = null; stagedResponse = null; response = null }
 }

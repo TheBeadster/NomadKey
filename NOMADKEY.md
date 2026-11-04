@@ -1,5 +1,16 @@
 # NomadKey development feature
 
+## Dev4 NFC handoff
+
+After CTAP, the internal NFC prompt keeps reader mode and SKIP_NDEF_CHECK
+enabled until Android reports tag removal (one-second debounce). The result
+broker stages the assertion until removal; pause, cancel and a 20-second
+removal timeout discard it. If removal detection is unavailable, the user
+must move the key away and explicitly confirm before returning. This avoids
+releasing a still-present Flex to Android's NDEF URL dispatch. Background
+revocation, server lifetime and credential scope are unchanged. Hardware
+confirmation on the S24 remains required; see the backend dev4 guide.
+
 ## Dev3 (current)
 
 The primary flow now uses normal Announces, the NomadNet browser and its
