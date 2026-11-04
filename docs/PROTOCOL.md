@@ -44,7 +44,8 @@ RNS destination request cap is 16 KiB, checked by RNS before accepting oversized
 - Static files are administered locally. Concurrent malicious filesystem replacement by a compromised local service owner is outside the threat model; content checks do not sandbox the OS administrator.
 - Transport/router caches retain public routing metadata; protected content, assertions and PINs are not intentionally persisted by the custom client. Memory remanence and OS compromise are outside scope.
 - This is a development protocol, not an independent security audit or a standard WebAuthn website deployment.
-# Normal-browser integration (dev3)
+
+## Normal-browser integration (dev3)
 
 With `--browser-login`, only `/page/index.mu` may return a public authentication landing page without session authority. The same path returns private content only after the existing per-link permission check. `/page/forget.mu` revokes only its requesting link and returns the public page. Minimal discovery remains public. Other configured routes keep the default-deny handler. Private page responses carry `#!nomadkey-v1 private`, `#!c=0` and a Forget me link; public responses carry `#!nomadkey-v1 public`.
 

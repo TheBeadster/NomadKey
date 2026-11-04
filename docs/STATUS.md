@@ -6,6 +6,10 @@ Normal Announces -> public login page -> fingerprint menu NFC -> private page in
 
 PiMonitor staged verification: 50 tests passed and real-RNS software browser flow passed. Deployment preserved the sole enrolled credential and service identity exactly, and both original services and the original NomadNet process remained unchanged. New backup recorded in Operations. New normal-browser hardware testing remains outstanding; prior user-reported Flex/expiry/Forget me results do not establish this new UI flow.
 
+Final Android dev3 build and signature verification passed. 91 targeted Android tests passed, including refusal to persist/restore protected page bodies and rejection of late NFC results after cancellation. External `mh.beady.com:444` readback confirmed the deployed public login response without private metrics for an unenrolled client.
+
+Dev3 emulator upgrade installed and launched, but system UI/automation failures blocked the complete browser navigation check; do not count it as passed. The release remains a development test build pending S24 confirmation of the new flow. Final server audit: all three services active; original NomadNet PID 2927 unchanged; 183 original page files; one enrolled credential; service identity mode 0600 and secure backup matching. Six selected sensitive markers were absent from 73 journal lines (bounded check only).
+
 ## 4 November 2026 update
 
 - User-reported physical Android/Flex result: enrolled through the app, opened the synthetic protected page, then confirmed denial after both timeout and Forget me. This is the user's observed hardware result, not an automated hardware test. One public credential was imported with pages:read only; no authenticator private key is held by the server.

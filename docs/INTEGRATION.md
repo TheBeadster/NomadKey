@@ -37,3 +37,9 @@ This first client connects to a configured TCP Reticulum transport with an edita
 - [YubiKit Android](https://github.com/Yubico/yubikit-android) was considered; its vendor-specific device discovery must not be assumed compatible with an Apex applet. This prototype uses Android ISO-DEP and Yubico's generic python-fido2 CTAP/PIN stack instead. The APDU transport is small, bounded and software-tested, but actual Apex/YubiKey interoperability is unverified.
 
 No Google/Apple sign-in, central authorization server, synchronized passkey or DNS validation is silently required.
+
+## Dev3 integration update
+
+The new primary Android flow lives in the normal NomadNet browser and fingerprint menu. `RnsNomadnet.nomadkeyOperation` passes bounded control requests through the existing AIDL backend bridge. The Python implementation reuses its actual cached `RNS.Link` and runtime identity; it invokes the reusable `nomadkey.browser` SDK, not a second Reticulum instance. The existing configured TCP/RNode/BLE transport therefore supplies the link, although only TCP has been exercised for this flow.
+
+An internal, non-exported NFC activity in the UI process performs direct ISO-DEP CTAP2. PIN, bound request and assertion cross this short activity boundary through a generation-checked, one-use memory broker, never saved activity arguments. Public/private marker handling in the normal browser disables protected caching, history, restoration, media and partial requests. The original standalone activity remains only as an enrollment/testing compatibility path. Earlier separate-activity/TCP limitations above describe dev1/dev2.

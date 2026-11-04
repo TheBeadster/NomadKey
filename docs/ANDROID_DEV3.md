@@ -33,3 +33,9 @@ Build command: `:app:assembleNoSentryPythonBackendDebug -PcolumbaVersionName=2.3
 Package `network.columba.app.nomadkey.dev`. Official Columba base `87b513e60a7b0fce8895f138d11949e4fcfa1e0f` (v2.3.1-beta). Embedded SDK `0.1.0.dev3`, wheel SHA-256 `3ee21a4a5bdb0ddda0df730a68c97c7d1bc620fe6a20667044448ad370bf6754`.
 
 Signing certificate SHA-256: `bcb3ce651b9cdb5bf155705144ac2db4e9becd1f527e6404404621e84c3f9e66`. APK checksum and source commit identifiers accompany the release.
+
+Final APK: `NomadKey-Columba-2.3.1-beta-dev3.apk`, 136360384 bytes. SHA-256 `7bfb8fc1227762b0f6f2b83445becaefff8177bc06553b3aac0f5c36726c8f97`. Signature verified with apksigner; package version code `20301020`, version name `2.3.1-beta-nomadkey.3-nomadkey-dev`.
+
+API 36 emulator: in-place installation succeeded and the main activity launched, reaching the upstream Bluetooth-permission UI. Repeated Android System UI ANRs, a Bluetooth-system crash and UiAutomation connection timeouts prevented a reliable complete Announces/browser walkthrough. This is **not** a passed emulator navigation/NFC test. No claim is made that the new UI flow has been physically verified. The development APK is provided for the S24 test; its SHA-256 was also verified against GitHub's uploaded-asset digest.
+
+Backend code commit: `8dec82b9a617ea86ba3534f5ade2227386a280b7`. Columba feature commit: `863612c7c181c05c12873849e3c5b1abe2851b8a`. The distributed build disables the upstream exported debug test receiver as well as heap snapshots and Sentry. Final targeted Android regression run: **91 tests passed** (73 browser ViewModel, 16 disk cache, 2 ceremony handoff). The live external transport probe verified service identity and confirmed an unenrolled connection received only the public login page.
