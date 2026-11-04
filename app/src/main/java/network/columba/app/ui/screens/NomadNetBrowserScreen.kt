@@ -142,6 +142,12 @@ fun NomadNetBrowserScreen(
     val coroutineScope = rememberCoroutineScope()
 
     val context = LocalContext.current
+    val privatePagesIntent = remember(context) {
+        Intent().setClassName(context.packageName, "network.columba.app.rns.backend.py.NomadKeyActivity")
+    }
+    val privatePagesAvailable = remember(context) {
+        privatePagesIntent.resolveActivity(context.packageManager) != null
+    }
     val clipboardManager = LocalClipboardManager.current
     val focusManager = LocalFocusManager.current
 
@@ -450,6 +456,16 @@ fun NomadNetBrowserScreen(
                             onDismissRequest = { showMenu = false },
                         ) {
                             // Copy URL — derive from compose state
+                            if (privatePagesAvailable) {
+                                DropdownMenuItem(
+                                    text = { Text("Private pages · NomadKey") },
+                                    onClick = {
+                                        showMenu = false
+                                        context.startActivity(privatePagesIntent)
+                                    },
+                                )
+                                HorizontalDivider()
+                            }
                             val shareableUrl =
                                 (browserState as? BrowserState.PageLoaded)?.let {
                                     "nomadnetwork://${it.nodeHash}:${buildNomadNetPersistPath(it.path, it.fieldTokens)}"
@@ -686,6 +702,15 @@ fun NomadNetBrowserScreen(
                             Spacer(modifier = Modifier.height(12.dp))
                             Button(onClick = submitHomeUrl) {
                                 Text("Go")
+                            }
+                            if (privatePagesAvailable) {
+                                Spacer(modifier = Modifier.height(16.dp))
+                                Button(onClick = { context.startActivity(privatePagesIntent) }) {
+                                    Icon(Icons.Default.Fingerprint, contentDescription = null)
+                                    Spacer(modifier = Modifier.width(8.dp))
+                                    Text("Private pages · NomadKey")
+                                }
+                                Text("Use your NFC key for temporary access.", style = MaterialTheme.typography.bodySmall)
                             }
                         }
                     }

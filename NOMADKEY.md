@@ -28,8 +28,17 @@ deployment. It contains no authenticator PIN or private key. Without it the
 user enters those public settings. Full destination/public-key matching is
 checked before connection. The TCP port is editable (default 444).
 
-Physical Flex/YubiKey testing is pending. This activity renders static test
-content as text; executable pages, forms, rich media and the normal Columba
+Dev2 integrates the protected activity into the normal NomadNet home and
+overflow menu as **Private pages · NomadKey**, with a return to Columba button.
+It displays a session countdown and automatically reads the protected page
+after NFC authentication. The current PiMonitor page is live read-only host
+status. Existing enrolled Flex credentials and public connection settings
+survive an in-place update of this development package.
+
+The user reported successful Android/Flex authentication, timeout denial and
+Forget me denial on 4 November 2026. Backup YubiKey testing remains pending.
+This activity renders protected content as text; executable pages, forms,
+rich media and the normal Columba
 BLE/LoRa interface manager are not integrated in this milestone. Use the
 configured TCP Reticulum transport. Treat this as a development build, not a
 production replacement or an upstream release.

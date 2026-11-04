@@ -24,6 +24,7 @@ class NomadKeyActivity : Activity(), NfcAdapter.ReaderCallback {
     private val busy = AtomicBoolean(false)
     private lateinit var status: TextView
     private lateinit var page: TextView
+    private lateinit var sessionStatus: TextView
     private lateinit var host: EditText
     private lateinit var port: EditText
     private lateinit var destination: EditText
@@ -49,18 +50,28 @@ class NomadKeyActivity : Activity(), NfcAdapter.ReaderCallback {
             it.importantForAutofill=android.view.View.IMPORTANT_FOR_AUTOFILL_NO
             layout.addView(it)
         }
-        text("NomadKey DEV — Columba 2.3.1-beta")
-        text("Verify and pin the full service destination and key through a trusted channel. NFC hardware compatibility is unverified.")
+        text("Private pages · NomadKey").apply { textSize=24f }
+        text("PiMonitor · temporary access with your NFC key")
+        val settings = LinearLayout(this).apply { orientation=LinearLayout.VERTICAL; visibility=android.view.View.GONE }
         host=field("Reticulum TCP transport host")
         port=field("TCP port").apply { inputType=InputType.TYPE_CLASS_NUMBER; setText("444") }
         destination=field("Full NomadNet destination (32 hex)")
         serviceKey=field("Service public key (128 hex)")
+        for (field in listOf(host,port,destination,serviceKey)) { layout.removeView(field); settings.addView(field) }
+        layout.addView(Button(this).apply {
+            text="Service address and connection settings"
+            setOnClickListener { settings.visibility=if(settings.visibility==android.view.View.VISIBLE) android.view.View.GONE else android.view.View.VISIBLE }
+        })
+        layout.addView(settings)
         pin=field("Authenticator FIDO2 PIN — never saved").apply { inputType=InputType.TYPE_CLASS_TEXT or InputType.TYPE_TEXT_VARIATION_PASSWORD }
-        status=text("No authority. Enter the public service pin.")
-        page=text("").apply { isSaveEnabled=false; setTextIsSelectable(false) }
+        status=text("Connect, then authenticate with your enrolled NFC key.")
+        sessionStatus=text("Locked · no active session")
+        page=text("").apply { isSaveEnabled=false; setTextIsSelectable(false); textSize=17f; setPadding(0,24,0,24) }
         fun button(label: String, action: () -> Unit) { layout.addView(Button(this).apply { text=label; setOnClickListener { action() } }) }
         button("Verify pin and connect") {
+            if (busy.get()) return@button
             generation++; page.text=""; expiresAt=0; publicBundle=null
+            status.text="Connecting to the pinned service…"
             val h=host.text.toString().trim(); val p=port.text.toString().trim(); val d=destination.text.toString().trim(); val k=serviceKey.text.toString().trim()
             job {
                 if (!Python.isStarted()) Python.start(AndroidPlatform(this))
@@ -75,9 +86,8 @@ class NomadKeyActivity : Activity(), NfcAdapter.ReaderCallback {
                 }
             }
         }
-        button("Enroll Flex / backup key (local approval required)") { arm("enroll") }
         button("Authenticate — tap NFC key") { arm("authenticate") }
-        button("Read / refresh test page") {
+        button("Refresh private page") {
             val started=generation
             job {
                 val body=module!!.callAttr("read").toString()
@@ -85,6 +95,12 @@ class NomadKeyActivity : Activity(), NfcAdapter.ReaderCallback {
             }
         }
         button("Forget me") { revoke() }
+        button("Return to Columba") {
+            startActivity(Intent().setClassName(packageName,"network.columba.app.MainActivity"))
+            finish()
+        }
+        text("Credential setup · only needed for a new key")
+        button("Enroll Flex / backup key (local approval required)") { arm("enroll") }
         button("Export public enrollment bundle") {
             if (publicBundle==null) status.text="Enroll first. No private key will be exported."
             else startActivityForResult(Intent(Intent.ACTION_CREATE_DOCUMENT).apply {
@@ -119,11 +135,16 @@ class NomadKeyActivity : Activity(), NfcAdapter.ReaderCallback {
             val bridge=NfcBridge(iso)
             try {
                 val result=module!!.callAttr("nfc",bridge,enteredPin,action).toString()
+                val body=if(action=="authenticate") module!!.callAttr("read").toString() else ""
                 val remaining=if(action=="authenticate") module!!.callAttr("remaining").toDouble() else 0.0
                 runOnUiThread {
                     if(visible && started==generation) {
                         if(action=="enroll") { publicBundle=result; status.text="Credential created with UV. Export public bundle for trusted local administration; access is still denied." }
-                        else { expiresAt=android.os.SystemClock.elapsedRealtime()+(remaining*1000).toLong(); status.text="Authenticated. Absolute expiry in ${remaining.toInt()} seconds." }
+                        else {
+                            expiresAt=android.os.SystemClock.elapsedRealtime()+(remaining*1000).toLong()
+                            status.text="Authenticated · refresh never extends this session."
+                            if(remaining>0) page.text=body
+                        }
                     }
                 }
             } finally { bridge.close() }
@@ -157,6 +178,8 @@ class NomadKeyActivity : Activity(), NfcAdapter.ReaderCallback {
     private val tick=object:Runnable {
         override fun run() {
             if(expiresAt>0 && android.os.SystemClock.elapsedRealtime()>=expiresAt) { revoke() }
+            val remaining=if(expiresAt>0) ((expiresAt-android.os.SystemClock.elapsedRealtime()).coerceAtLeast(0)+999)/1000 else 0
+            sessionStatus.text=if(remaining>0) "Access remaining: ${remaining/60}:${(remaining%60).toString().padStart(2,'0')}" else "Locked · no active session"
             ui.postDelayed(this,250)
         }
     }
