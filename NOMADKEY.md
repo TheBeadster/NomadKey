@@ -1,5 +1,23 @@
 # NomadKey development feature
 
+## Dev3 (current)
+
+The primary flow now uses normal Announces, the NomadNet browser and its
+fingerprint menu. Public login and private content share the same page path.
+The reusable SDK uses the actual browser link and Columba runtime identity,
+with session authority scoped to that one connection. Normal configured
+transports are reused; only TCP has been exercised so far.
+
+Protected pages skip disk cache, history, restoration, media and partial
+prefetch. Forms and downloads are disabled. An internal NFC prompt exchanges
+ceremony data through a one-use memory broker, never saved Intent extras.
+The older separate launcher remains for enrollment. Build with SDK wheel
+`nomadkey-0.1.0.dev3-py3-none-any.whl`; see the backend dev3 guide for hashes.
+The exported upstream debug test receiver is disabled in this distributed
+development build. No LeakCanary/Sentry or coverage snapshots are enabled.
+
+The notes below record earlier development stages, not the dev3 primary flow.
+
 Based on official Columba `v2.3.1-beta`, commit `87b513e60a7b0fce8895f138d11949e4fcfa1e0f`.
 
 Feature source, protocol, tests and operations documentation:
