@@ -2,6 +2,7 @@ import argparse
 import json
 import os
 import threading
+import textwrap
 import time
 from pathlib import Path
 import RNS
@@ -101,17 +102,35 @@ class Server:
 
     @staticmethod
     def login_page(message='Authentication is required to read this site.'):
-        return ('#!nomadkey-v1 public\n#!c=0\n>PiMonitor private site\n\n'+message+
-                '\n\n>Columba upgrade required\n'
-                'FIDO2 login needs the NomadKey-enabled Columba development build (dev4 or newer).\n'
-                'Download and installation instructions - open in your web browser:\n'
-                'https://github.com/TheBeadster/NomadKey\n'
-                'https://github.com/TheBeadster/NomadKey/releases\n'
-                'Install the update over Columba NomadKey DEV. Existing enrolled keys do not need enrolling again.\n'
-                'New users: the site administrator must enrol your key and grant access. Installing the app alone does not grant access.\n'
-                '\n\nOpen the fingerprint menu and choose Authenticate with NFC key.\n'
-                'Verify the full service address, then use your enrolled Flex or YubiKey.\n'
-                'Access lasts five minutes. Browsing never extends it.\n\n'
+        # Columba defaults to a horizontally scrolling monospace renderer.
+        # Keep visible lines short, including the auto-linked web address.
+        return ('#!nomadkey-v1 public\n#!c=0\n'
+                '`!NOMADKEY`!\n'
+                '    .----.\n'
+                '   / ()  \\________\n'
+                '   \\     /--|_|_|\n'
+                "    '----'\n"
+                'One key. Five minutes.\n\n'
+                '`!PiMonitor private site`!\n'+textwrap.fill(message,29)+
+                '\n\n`!Columba upgrade required`!\n'
+                'Use Columba NomadKey DEV,\n'
+                'dev4 or newer. Get the APK:\n'
+                'github.com/TheBeadster/NomadKey\n'
+                'Tap Releases for downloads.\n\n'
+                'Update your existing DEV app.\n'
+                'Enrolled keys still work.\n\n'
+                '`!Unlock this site`!\n'
+                '1. Open the fingerprint menu.\n'
+                '2. Authenticate with NFC key.\n'
+                '3. Check the full address;\n'
+                '   use your Flex or YubiKey.\n\n'
+                'Access lasts five minutes.\n'
+                'Browsing never extends it.\n\n'
+                '`!New here?`!\n'
+                'Ask the site administrator\n'
+                'to enrol your key and grant\n'
+                'access. Installing the app\n'
+                'alone does not grant access.\n\n'
                 '`[Forget me`/page/forget.mu]\n').encode()
 
 
