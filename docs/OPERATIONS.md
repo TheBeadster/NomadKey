@@ -55,6 +55,8 @@ Requires JDK 17+, Android SDK 36 and a Chaquopy-compatible Python 3.11 build hos
 
 ## Rollback
 
+Dev3 adds `--browser-login` to the existing status-page override. Backup before this change: `/home/dadmin/codex-backups/nomadkey-dev3-20261104T174714Z`. To roll back only this integration: stop `nomadkey-dev`, restore that backup's `source` tree to the isolated source location and its `20-status-page.conf` to `/etc/systemd/system/nomadkey-dev.service.d/20-status-page.conf`, run daemon-reload, then start `nomadkey-dev`. Preserve the current `state` directory (especially credentials and authenticator counters); do not overwrite it with older credential backups. The dev2 client remains compatible with the old source. To stop the test entirely, use the commands below. Original NomadNet services/pages were not modified.
+
 Dev2 live-status page uses `/etc/systemd/system/nomadkey-dev.service.d/20-status-page.conf`, which adds `--status-page` to the original command. To return to the static test page while preserving enrollment, remove only that override, run `sudo systemctl daemon-reload`, then `sudo systemctl restart nomadkey-dev`. Restart invalidates sessions. The original content manifest is still the complete allowlist; no dynamic script execution is enabled. The host snapshot reads local OS metrics and never extends session expiry.
 
 ```sh

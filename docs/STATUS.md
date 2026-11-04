@@ -1,5 +1,11 @@
 # Verification status
 
+## Dev3 normal-browser update
+
+Normal Announces -> public login page -> fingerprint menu NFC -> private page in the same browser is implemented. See [dev3 guide](ANDROID_DEV3.md). The prior separate-view/TCP-only descriptions below refer to older builds. Dev3 uses the normal Python Reticulum backend and configured transport; non-TCP interfaces have not been physically tested.
+
+PiMonitor staged verification: 50 tests passed and real-RNS software browser flow passed. Deployment preserved the sole enrolled credential and service identity exactly, and both original services and the original NomadNet process remained unchanged. New backup recorded in Operations. New normal-browser hardware testing remains outstanding; prior user-reported Flex/expiry/Forget me results do not establish this new UI flow.
+
 ## 4 November 2026 update
 
 - User-reported physical Android/Flex result: enrolled through the app, opened the synthetic protected page, then confirmed denial after both timeout and Forget me. This is the user's observed hardware result, not an automated hardware test. One public credential was imported with pages:read only; no authenticator private key is held by the server.

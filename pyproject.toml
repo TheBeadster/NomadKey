@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "nomadkey"
-version = "0.1.0.dev1"
+version = "0.1.0.dev3"
 description = "Development session-bound FIDO2 authorization for Reticulum"
 requires-python = ">=3.11"
 dependencies = ["fido2==2.2.1", "rns>=1.5.2,<=1.5.7"]
