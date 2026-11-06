@@ -17,7 +17,7 @@ import com.chaquo.python.android.AndroidPlatform
 import network.columba.app.rns.api.NomadKeyCeremony
 import java.util.concurrent.atomic.AtomicBoolean
 
-/** Direct CTAP prompt; keep reader mode until removal so an NDEF URL cannot take over. */
+/** Direct CTAP prompt; retain reader mode until the user confirms the key is away. */
 class NomadKeyNfcActivity : Activity(), NfcAdapter.ReaderCallback {
     private var input: NomadKeyCeremony.Input? = null
     private var iso: IsoDep? = null
@@ -33,7 +33,8 @@ class NomadKeyNfcActivity : Activity(), NfcAdapter.ReaderCallback {
             waitingForRemoval = false
             NomadKeyCeremony.clear()
             setResult(RESULT_CANCELED)
-            finish()
+            status.text = "Authentication timed out. Move the phone away from your key, then tap below to close. Please try again from the site."
+            continueButton.setOnClickListener { finish() }
         }
     }
 
@@ -94,10 +95,10 @@ class NomadKeyNfcActivity : Activity(), NfcAdapter.ReaderCallback {
         }
         waitingForRemoval = true
         status.text = if (assertion != null)
-            "Key read. Move your phone away from Flex (or remove your YubiKey). The site will open after the key is out of range."
-        else "Key authentication failed. Move your phone away from the key to return. No automatic PIN retry."
-        // Keep SKIP_NDEF_CHECK active and suppress rediscovery until the tag has
-        // been absent for one second. Do not finish the activity with a tag present.
+            "Key read. Move your phone away from Flex (or remove your YubiKey), then tap below to return to the site. NFC website opening stays suppressed while this screen is open."
+        else "Key authentication failed. Move your phone away from the key, then tap below to return. No automatic PIN retry."
+        // A removal callback can follow intermittent RF contact. Never use it
+        // to finish automatically: keep SKIP_NDEF_CHECK until explicit confirmation.
         val released = {
             if (waitingForRemoval && !isFinishing && !isDestroyed) {
                 waitingForRemoval = false
@@ -107,17 +108,21 @@ class NomadKeyNfcActivity : Activity(), NfcAdapter.ReaderCallback {
                 finish()
             }
         }
+        continueButton.visibility = View.VISIBLE
+        continueButton.setOnClickListener { released() }
         ui.postDelayed(removalTimeout, 20000)
         val removalRegistered = try {
-            adapter?.ignore(tag, 1000, { released() }, ui) == true
+            adapter?.ignore(tag, 1000, {
+                if (waitingForRemoval && !isFinishing && !isDestroyed) {
+                    status.append("\n\nKey left NFC range. Keep it away until you have returned to the site.")
+                }
+            }, ui) == true
         } catch (_: Exception) { false }
         if (!removalRegistered) {
             // false also means already removed. Never assume physical removal
             // when the NFC service cannot confirm it; retain reader mode until
             // the user explicitly confirms the key is away.
             status.append("\n\nRemoval could not be confirmed. Move the key away, then tap below.")
-            continueButton.visibility = View.VISIBLE
-            continueButton.setOnClickListener { released() }
         }
     }
 

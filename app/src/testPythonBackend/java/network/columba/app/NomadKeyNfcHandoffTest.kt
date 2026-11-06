@@ -51,6 +51,11 @@ class NomadKeyNfcHandoffTest {
         method.invoke(activity, mockk<Tag>(), generation, assertion)
     }
 
+    private fun confirmKeyAway() {
+        val field = activityType.getDeclaredField("continueButton").apply { isAccessible = true }
+        (field.get(activity) as Button).performClick()
+    }
+
     @After fun cleanup() {
         if (::controller.isInitialized) controller.pause().stop().destroy()
         NomadKeyCeremony.clear()
@@ -58,12 +63,16 @@ class NomadKeyNfcHandoffTest {
         clearAllMocks()
     }
 
-    @Test fun keyReadKeepsReaderActiveUntilRemoval() {
+    @Test fun removalKeepsReaderActiveUntilUserConfirmation() {
         keyRead()
         assertFalse(activity.isFinishing)
         assertNull(NomadKeyCeremony.takeResponse())
         verify(exactly = 0) { adapter.disableReaderMode(any()) }
         listener.captured.onTagRemoved()
+        assertFalse(activity.isFinishing)
+        assertNull(NomadKeyCeremony.takeResponse())
+        verify(exactly = 0) { adapter.disableReaderMode(any()) }
+        confirmKeyAway()
         assertTrue(activity.isFinishing)
         assertEquals(Activity.RESULT_OK, shadowOf(activity).resultCode)
         assertEquals("software-assertion", NomadKeyCeremony.takeResponse())
@@ -73,6 +82,7 @@ class NomadKeyNfcHandoffTest {
         keyRead()
         controller.pause()
         listener.captured.onTagRemoved()
+        confirmKeyAway()
         assertTrue(activity.isFinishing)
         assertEquals(Activity.RESULT_CANCELED, shadowOf(activity).resultCode)
         assertNull(NomadKeyCeremony.takeResponse())
@@ -82,6 +92,10 @@ class NomadKeyNfcHandoffTest {
         keyRead()
         shadowOf(Looper.getMainLooper()).idleFor(Duration.ofSeconds(20))
         listener.captured.onTagRemoved()
+        assertFalse(activity.isFinishing)
+        assertNull(NomadKeyCeremony.takeResponse())
+        verify(exactly = 0) { adapter.disableReaderMode(any()) }
+        confirmKeyAway()
         assertTrue(activity.isFinishing)
         assertEquals(Activity.RESULT_CANCELED, shadowOf(activity).resultCode)
         assertNull(NomadKeyCeremony.takeResponse())
@@ -92,8 +106,7 @@ class NomadKeyNfcHandoffTest {
         keyRead()
         assertFalse(activity.isFinishing)
         assertNull(NomadKeyCeremony.takeResponse())
-        val field = activityType.getDeclaredField("continueButton").apply { isAccessible = true }
-        (field.get(activity) as Button).performClick()
+        confirmKeyAway()
         assertEquals(Activity.RESULT_OK, shadowOf(activity).resultCode)
         assertEquals("software-assertion", NomadKeyCeremony.takeResponse())
     }
@@ -102,6 +115,8 @@ class NomadKeyNfcHandoffTest {
         keyRead(null)
         assertFalse(activity.isFinishing)
         listener.captured.onTagRemoved()
+        assertFalse(activity.isFinishing)
+        confirmKeyAway()
         assertEquals(Activity.RESULT_CANCELED, shadowOf(activity).resultCode)
         assertNull(NomadKeyCeremony.takeResponse())
     }
