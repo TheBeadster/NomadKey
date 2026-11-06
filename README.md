@@ -1,6 +1,16 @@
 # NomadKey — development prototype
 
-FIDO2 authorization for short-lived access to a separate NomadNet service, using replaceable Reticulum client identities. No SMS or banking integration.
+**Use your key to prove you have access, whatever phone or computer you use.**
+
+Think of a Reticulum endpoint ID as the name your app uses on the network. It helps the site recognise the connection, but it does **not** prove which person is holding the phone. It is not a permanent label for the physical device either: you can create a new identity or move one between devices.
+
+NomadKey adds a second check using a **FIDO2 security key**, such as a VivoKey Flex or YubiKey. The site asks your key to prove it is one the administrator has already approved. You use the key and its PIN to answer. The secret inside the key never leaves it.
+
+That means **your access follows your security key, not your endpoint ID**. You can use your own phone, a borrowed phone, or a new temporary Reticulum identity. You do not need to copy your usual identity onto that device. The site recognises the approved key and gives that connection access to the pages you are allowed to read.
+
+For example: borrow a phone with the NomadKey-enabled Columba app, open the site, authenticate with your Flex, and read your private pages. Access ends after five minutes by default, even if you keep browsing. Tap **Forget me** to end it sooner. A different connection must authenticate for itself.
+
+The key proves that you can use an approved credential; the administrator decides whose key it is and what it may access. NomadKey currently protects NomadNet pages. SMS and banking features are outside this prototype.
 
 **Development build.** The user confirmed Android/Flex authentication, five-minute expiry denial and Forget me denial on 4 November 2026. YubiKey and PC hardware remain untested. Existing estate pages remain on their original service. The protected destination now serves live, read-only PiMonitor host status. Follow [status](docs/STATUS.md) for actual checks and outstanding limitations.
 
