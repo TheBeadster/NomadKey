@@ -6,7 +6,7 @@ FIDO2 authorization for short-lived access to a separate NomadNet service, using
 
 ## Android download
 
-Get the [NomadKey-enabled Columba development APK](https://github.com/TheBeadster/NomadKey/releases/tag/nomadkey-dev4) and follow the [installation and NFC instructions](docs/ANDROID_DEV4.md). Use dev4 or newer for a Flex that also stores a website. Upgrade the existing Columba NomadKey DEV app in place; existing enrolled keys remain valid. New users still need trusted administrator enrollment and permission: installing this app alone does not unlock a protected site.
+Get the [NomadKey-enabled Columba development APK](https://github.com/TheBeadster/NomadKey/releases/tag/nomadkey-dev5) and follow the [installation and NFC instructions](docs/ANDROID_DEV5.md). Use dev5 or newer for a Flex that also stores a website. Upgrade the existing Columba NomadKey DEV app in place; existing enrolled keys remain valid. New users still need trusted administrator enrollment and permission: installing this app alone does not unlock a protected site.
 
 The backend, protocol and tests are on this branch. Columba changes are on [columba/nomadkey-development](https://github.com/TheBeadster/NomadKey/tree/columba/nomadkey-development). APKs are development builds with published checksums, not official upstream Columba releases.
 
@@ -34,4 +34,4 @@ See [protocol and threat model](docs/PROTOCOL.md), [integration decisions](docs/
 
 The [dev3 Android guide](docs/ANDROID_DEV3.md) describes the normal-browser flow. The older separate development launcher remains available for trusted enrollment.
 
-[Dev4](docs/ANDROID_DEV4.md) fixes the NFC handoff when Flex also stores a website: keep reader mode until the key is removed, then return to the protected page. Background revocation remains enabled.
+[Dev5](docs/ANDROID_DEV5.md) keeps NFC reader mode active until you move the key away and explicitly confirm the return to the site. Background revocation remains enabled.

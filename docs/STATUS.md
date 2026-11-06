@@ -1,5 +1,11 @@
 # Verification status
 
+## Dev5 explicit NFC handoff
+
+On 6 November the user reported that the NFC-to-website transition still catches them out. Dev5 requires an explicit return after moving the key away; neither removal callbacks nor the pending-assertion timeout automatically release reader mode. See [dev5 guide](ANDROID_DEV5.md). Physical dev5 testing remains pending. Server and credential state are unchanged.
+
+All 98 targeted Android tests passed, including the five NFC activity lifecycle checks with simulated Android callbacks. These do not establish physical NFC behaviour.
+
 ## Dev4 NFC handoff repair
 
 The user confirmed dev3 authentication on the S24, then reported that the Flex's saved URL opened in the default browser and caused the expected background deauthentication. Dev4 retains NFC reader mode until tag removal, stages the assertion in memory until that handoff completes, and preserves background revocation. See [dev4 guide](ANDROID_DEV4.md). Physical confirmation of the removal fix remains pending.
