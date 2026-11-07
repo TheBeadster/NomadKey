@@ -1,5 +1,11 @@
 # Verification status
 
+## Dev6 NFC progress and bounded retries
+
+The user requested visible authentication progress, tolerance of brief NFC contact loss, a 15-second attempt window, and explicit Success/Continue or Failed/Try again screens. Dev6 implements this in the NFC activity. Try again returns to the page; it does not automatically resubmit a PIN. Only observed transport I/O failures permit another detection within the same deadline. See [dev6 guide](ANDROID_DEV6.md). Physical dev6 testing remains pending; server and enrolled credentials are unchanged.
+
+104 targeted Android tests passed, including 11 NFC activity/transport checks using simulated hardware. None establishes a physical S24/Flex result.
+
 ## Dev5 explicit NFC handoff
 
 On 6 November the user reported that the NFC-to-website transition still catches them out. Dev5 requires an explicit return after moving the key away; neither removal callbacks nor the pending-assertion timeout automatically release reader mode. See [dev5 guide](ANDROID_DEV5.md). Physical dev5 testing remains pending. Server and credential state are unchanged.
