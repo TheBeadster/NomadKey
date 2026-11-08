@@ -16,7 +16,7 @@ The key proves that you can use an approved credential; the administrator decide
 
 ## Android download
 
-Get the [NomadKey-enabled Columba development APK](https://github.com/TheBeadster/NomadKey/releases/tag/nomadkey-dev7) and follow the [installation and NFC instructions](docs/ANDROID_DEV7.md). Use dev6 or newer for a Flex that also stores a website. Upgrade the existing Columba NomadKey DEV app in place; existing enrolled keys remain valid. New users still need trusted administrator enrollment and permission: installing this app alone does not unlock a protected site.
+Get the [NomadKey-enabled Columba development APK](https://github.com/TheBeadster/NomadKey/releases/tag/nomadkey-dev8) and follow the [installation and NFC instructions](docs/ANDROID_DEV8.md). Use dev6 or newer for a Flex that also stores a website. Upgrade the existing Columba NomadKey DEV app in place; existing enrolled keys remain valid. New users still need trusted administrator enrollment and permission: installing this app alone does not unlock a protected site.
 
 The backend, protocol and tests are on this branch. Columba changes are on [columba/nomadkey-development](https://github.com/TheBeadster/NomadKey/tree/columba/nomadkey-development). APKs are development builds with published checksums, not official upstream Columba releases.
 
@@ -26,7 +26,8 @@ The backend, protocol and tests are on this branch. Columba changes are on [colu
 - Session authority bound to one identified RNS link, its client public key, service identity, permissions and server lifetime.
 - Five-minute absolute server expiry using a monotonic clock; single-use 60-second challenges, fail-closed content checks, Forget me and fresh credential-removal authorization.
 - Columba 2.3.1-beta normal Announces and NomadNet browser integration: public login page, fingerprint-menu NFC authentication, normal Micron rendering, countdown and Forget me. Protected content bypasses browser caches, history and tab restoration. Uses Columba's configured Python RNS transport and Android ISO-DEP NFC.
-- NFC saved-site read/write flow, portable full destination/public-key pins and a Saved NFC sites menu. Requires compatible protected FIDO2 storage; physical bookmark tests pending. See [NFC bookmarks](docs/NFC_BOOKMARKS.md).
+- Automatic NFC type detection: normal blank NDEF tags share a public site address without a PIN; FIDO keys use the existing PIN-protected bookmark flow. Shared tags never replace trusted pins. See [dev8](docs/ANDROID_DEV8.md).
+- NFC saved-site read/write flow, portable full destination/public-key pins and a Saved NFC sites menu. Requires compatible protected FIDO2 storage; see [status](docs/STATUS.md) for hardware coverage. See [NFC bookmarks](docs/NFC_BOOKMARKS.md).
 - Trusted local public-credential import; no network first-user enrollment or reset.
 - Standalone PC NFC CLI. MeshChatX UI integration and PC hardware work deferred after the user requested server/Columba priority while away from the PC.
 

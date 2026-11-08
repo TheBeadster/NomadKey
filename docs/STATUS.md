@@ -1,8 +1,14 @@
 # Verification status
 
+## Dev8 public NFC sharing and automatic type detection
+
+Implemented one Save site to NFC action and one Read NFC address action. FIDO applet detection takes precedence over NDEF on dual-function keys. Normal blank NDEF tags use a public root address without a PIN; security keys use the existing protected bookmark workflow. Shared reads never persist trust or grant access. See [dev8 guide](ANDROID_DEV8.md). 136 targeted Android tests passed, including 21 new simulated tag/detection tests. APK signature verification and a repeat of the 21 sharing tests also passed. Physical dev8 tag tests remain pending. PiMonitor and the Python SDK are unchanged.
+
 ## Dev7 NFC saved addresses
 
-NFC bookmark save/read and persistent full service pins are implemented. See [dev7 guide](ANDROID_DEV7.md) and [format/security model](NFC_BOOKMARKS.md). 68 SDK tests passed (2 skipped), 135 targeted Android tests passed, and the real-RNS software authentication/session smoke test passed. No physical dev7 bookmark save/read has been performed. Actual Flex/YubiKey storage compatibility and successful provisioning remain hardware-dependent checks. No PiMonitor deployment or key write was performed by this update. APK build, package/version and unchanged signing certificate verification passed; the packaged Python assets include the dev7 bookmark module.
+After release, the user reported that dev7 "works perfect". This is user-reported success, not an agent-performed hardware test; the message did not enumerate tag models, firmware or backup-key checks.
+
+NFC bookmark save/read and persistent full service pins are implemented. See [dev7 guide](ANDROID_DEV7.md) and [format/security model](NFC_BOOKMARKS.md). 68 SDK tests passed (2 skipped), 135 targeted Android tests passed, and the real-RNS software authentication/session smoke test passed. No agent-performed physical dev7 bookmark test was run. The later user report above confirms reported success; detailed Flex/YubiKey model and firmware coverage remains unrecorded. No PiMonitor deployment or key write was performed by this update. APK build, package/version and unchanged signing certificate verification passed; the packaged Python assets include the dev7 bookmark module.
 
 ## Dev6 NFC progress and bounded retries
 
