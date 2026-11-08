@@ -55,3 +55,10 @@ Paired Columba source: `243bdcddb5e93d41e4d22982fd7bc4c1996d09ba` on
 `columba/nomadkey-development`. NomadNet browser regression tests: **77 passed**,
 zero failures or skips. Development package and signing certificate are unchanged
 from dev8 so an in-place upgrade preserves local identity and settings.
+
+Columba dev9 universal APK SHA-256:
+
+`581b3eb8258e38fa8db1ca4e327754c89ba61baf6654de003a2f2ccb6d3b6377`
+
+Version code `20301080`, package `network.columba.app.nomadkey.dev`. Final build
+completed successfully with the pinned dev9 SDK wheel above.
