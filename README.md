@@ -16,7 +16,7 @@ The key proves that you can use an approved credential; the administrator decide
 
 ## Android download
 
-**New Android Host experiment:** turn a spare NFC Android phone into a secure page server or SMS relay. See [setup, platform limits and physical test checklist](docs/ANDROID-HOST.md). This is a separate app, with a new service identity and new key enrolment; it does not change PiMonitor. Use the paired Columba dev9 client for notification registration.
+**New Android Host experiment:** turn a spare NFC Android phone into a secure page server or SMS relay. [Download Host dev1 and paired Columba dev9](https://github.com/TheBeadster/NomadKey/releases/tag/nomadkey-host-dev1). See [setup, platform limits and physical test checklist](docs/ANDROID-HOST.md) and [software validation](docs/HOST-DEV1-VALIDATION.md). This is a separate app, with a new service identity and new key enrolment; it does not change PiMonitor.
 
 Get the [NomadKey-enabled Columba development APK](https://github.com/TheBeadster/NomadKey/releases/tag/nomadkey-dev8) and follow the [installation and NFC instructions](docs/ANDROID_DEV8.md). Use dev6 or newer for a Flex that also stores a website. Upgrade the existing Columba NomadKey DEV app in place; existing enrolled keys remain valid. New users still need trusted administrator enrollment and permission: installing this app alone does not unlock a protected site.
 
