@@ -10,11 +10,13 @@ That means **your access follows your security key, not your endpoint ID**. You 
 
 For example: borrow a phone with the NomadKey-enabled Columba app, open the site, authenticate with your Flex, and read your private pages. Access ends after five minutes by default, even if you keep browsing. Tap **Forget me** to end it sooner. A different connection must authenticate for itself.
 
-The key proves that you can use an approved credential; the administrator decides whose key it is and what it may access. NomadKey currently protects NomadNet pages. SMS and banking features are outside this prototype.
+The key proves that you can use an approved credential; the administrator decides whose key it is and what it may access. NomadKey protects NomadNet pages. A separate experimental Android Host now adds an optional protected SMS inbox and sender-only alerts; banking integration remains outside scope.
 
 **Development build.** The user confirmed Android/Flex authentication, five-minute expiry denial and Forget me denial on 4 November 2026. YubiKey and PC hardware remain untested. Existing estate pages remain on their original service. The protected destination now serves live, read-only PiMonitor host status. Follow [status](docs/STATUS.md) for actual checks and outstanding limitations.
 
 ## Android download
+
+**New Android Host experiment:** turn a spare NFC Android phone into a secure page server or SMS relay. See [setup, platform limits and physical test checklist](docs/ANDROID-HOST.md). This is a separate app, with a new service identity and new key enrolment; it does not change PiMonitor. Use the paired Columba dev9 client for notification registration.
 
 Get the [NomadKey-enabled Columba development APK](https://github.com/TheBeadster/NomadKey/releases/tag/nomadkey-dev8) and follow the [installation and NFC instructions](docs/ANDROID_DEV8.md). Use dev6 or newer for a Flex that also stores a website. Upgrade the existing Columba NomadKey DEV app in place; existing enrolled keys remain valid. New users still need trusted administrator enrollment and permission: installing this app alone does not unlock a protected site.
 

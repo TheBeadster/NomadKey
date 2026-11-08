@@ -26,7 +26,7 @@ class Auth:
     Caller must supply transport-observed link and identified public key, never form fields.
     RNS verifies identification signatures over link_id + identity public key.
     """
-    def __init__(self, public_key, destination, credentials, lifetime=300, clock=time.monotonic):
+    def __init__(self, public_key, destination, credentials, lifetime=300, clock=time.monotonic, notification_handler=None):
         if type(lifetime) is not int or not 1 <= lifetime <= 3600:
             raise ValueError("lifetime must be 1..3600 seconds")
         self.public_key, self.destination = public_key, destination
@@ -36,6 +36,7 @@ class Auth:
         self.pending, self.sessions, self.attempts = {}, {}, {}
         self.global_attempts = []
         self.lock = threading.RLock()
+        self.notification_handler = notification_handler
 
     def _sweep(self):
         now = self.clock()
@@ -49,9 +50,12 @@ class Auth:
             self._sweep()
             if len(link) != 16 or len(client) != 64:
                 raise Denied("identified link required")
-            if permissions != ("pages:read",) and permissions != ("admin",):
+            if permissions not in (("pages:read",), ("admin",), ("notifications:manage",)):
                 raise Denied("unsupported permission")
-            if permissions == ("admin",):
+            if permissions == ("notifications:manage",):
+                if self.notification_handler is None or operation not in ({"notifications":"subscribe"},{"notifications":"unsubscribe"}):
+                    raise Denied("unsupported notification operation")
+            elif permissions == ("admin",):
                 if not isinstance(operation, dict) or set(operation) != {"remove_credential"}:
                     raise Denied("unsupported operation")
                 if operation["remove_credential"] not in self.credentials:
@@ -97,7 +101,10 @@ class Auth:
                 raise Denied("invalid assertion") from exc
             operation = pending["binding"]["operation"]
             if operation is not None:
-                self.remove_credential(operation["remove_credential"])
+                if "notifications" in operation:
+                    self.notification_handler(client, key, operation["notifications"])
+                else:
+                    self.remove_credential(operation["remove_credential"])
                 return {"ok": True, "operation": operation}
             # Restart destroys all objects. No wall clock or refresh mutation exists.
             self.sessions[link] = {"client":client, "credential":key, "deadline":self.clock()+self.lifetime,

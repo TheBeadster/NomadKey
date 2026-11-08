@@ -11,3 +11,5 @@ build/
 *.apk
 local.properties
 *.jks
+.gradle/
+*.log

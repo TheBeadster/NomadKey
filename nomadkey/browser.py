@@ -14,7 +14,7 @@ _lock = threading.RLock()
 
 
 def operation(link, identity, action, payload=''):
-    if action not in ('probe','begin','complete','forget','state'):
+    if action not in ('probe','begin','subscribe','unsubscribe','complete','forget','state'):
         raise ValueError('Unsupported operation')
     if len(payload)>16384: raise ValueError('Oversized request')
     key=link.link_id
@@ -31,13 +31,15 @@ def operation(link, identity, action, payload=''):
         value=decode(c.request('/nomadkey/discover'))
         if value.get('service')!=c.destination.hex() or value.get('service_key')!=c.public_key.hex():
             raise ValueError('Service verification failed')
-    elif action=='begin':
+    elif action in ('begin','subscribe','unsubscribe'):
         link.identify(identity)
-        options=c.begin()
+        expected=None if action=='begin' else {'notifications':action}
+        permissions=('pages:read',) if expected is None else ('notifications:manage',)
+        options=c.begin(permissions,expected)
         # c.begin validates server binding; transport context is independently
         # passed to the NFC process, which validates it again before CTAP.
         value={'options':options,'service':c.destination.hex(),'service_key':c.public_key.hex(),
-               'link':key.hex(),'client':identity.get_public_key().hex()}
+               'link':key.hex(),'client':identity.get_public_key().hex(),'action':action}
     elif action=='complete':
         value=c.complete(json.loads(payload))
     elif action=='forget':
@@ -54,7 +56,11 @@ def sign(bridge, pin, request_json):
     public=bytes.fromhex(value['service_key']); dest=bytes.fromhex(value['service'])
     Client(dest.hex(),public.hex())  # validates actual destination derived from service key
     options=value['options']; binding=decode(websafe_decode(options['challenge']))
-    check_binding(binding,dest,public,bytes.fromhex(value['link']),bytes.fromhex(value['client']),('pages:read',),None)
+    action=value.get('action','begin')
+    if action not in ('begin','subscribe','unsubscribe'):raise ValueError('Unsupported action')
+    operation=None if action=='begin' else {'notifications':action}
+    permissions=('pages:read',) if operation is None else ('notifications:manage',)
+    check_binding(binding,dest,public,bytes.fromhex(value['link']),bytes.fromhex(value['client']),permissions,operation)
     rp,_=scope(public,dest)
     if options['rpId']!=rp or options.get('userVerification')!='required': raise ValueError('Untrusted scope')
     device=AndroidNfcDevice(bridge)

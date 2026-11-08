@@ -57,6 +57,7 @@ class Client:
         if options['rpId']!=rp or websafe_decode(options['challenge'])!=bound or options.get('userVerification')!='required':
             raise ValueError('Untrusted credential request')
         self.pending_lifetime=value['binding']['lifetime']
+        self.pending_operation=operation
         return options
 
     def complete(self,response):
@@ -64,6 +65,10 @@ class Client:
         sent=time.monotonic()
         value=decode(self.request('/nomadkey/complete',encode(dict(response))))
         if not value.get('ok'): raise ValueError('Authentication rejected')
+        if self.pending_operation is not None:
+            if value.get('operation')!=self.pending_operation or 'expires_in' in value:raise ValueError('Operation result mismatch')
+            return value
+        if 'expires_in' not in value:raise ValueError('Missing session lifetime')
         if 'expires_in' in value:
             if value['expires_in'] != self.pending_lifetime: raise ValueError('Lifetime mismatch')
             self.deadline=sent+value['expires_in']
