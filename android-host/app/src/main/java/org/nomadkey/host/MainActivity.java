@@ -23,10 +23,12 @@ public class MainActivity extends Activity {
         super.onCreate(saved);getWindow().addFlags(WindowManager.LayoutParams.FLAG_SECURE);
         ScrollView scroll=new ScrollView(this);LinearLayout layout=new LinearLayout(this);layout.setOrientation(LinearLayout.VERTICAL);layout.setPadding(24,48,24,48);scroll.addView(layout);setContentView(scroll);
         label(layout,"NomadKey Host DEV",26);
-        label(layout,"A private page or SMS inbox, unlocked with your security key. Development build: device testing required.",16);
-        name=field(layout,"Public site name","NomadKey Host");uplink=field(layout,"Reticulum TCP host","mh.beady.com");port=field(layout,"TCP port","444");port.setInputType(InputType.TYPE_CLASS_NUMBER);
+        label(layout,"Keep private pages or text messages on this phone. Open them from another trusted phone using your security key. The door closes after five minutes, or when you tap Forget me. Development build: device testing required.",16);
+        label(layout,"The network address tells us which app is connecting. Your approved security key is the extra check that lets you in, even if you use a different phone or a new app identity.",16);
+        label(layout,"Connection settings (Beleth RNS Hub)",20);
+        name=field(layout,"Public site name","NomadKey Host");uplink=field(layout,"Reticulum TCP host","rns.beleth.net");port=field(layout,"TCP port","4242");port.setInputType(InputType.TYPE_CLASS_NUMBER);
         sms=new Switch(this);sms.setText("SMS relay (off = private page only)");layout.addView(sms);
-        try{JSONObject config=new JSONObject(getSharedPreferences("host",0).getString("config","{}"));name.setText(config.optString("name","NomadKey Host"));uplink.setText(config.optString("uplink","mh.beady.com"));port.setText(""+config.optInt("port",444));sms.setChecked(config.optString("mode").equals("sms"));}catch(Exception ignored){}
+        try{JSONObject config=new JSONObject(getSharedPreferences("host",0).getString("config","{}"));if(config.optString("uplink").equals("mh.beady.com") && config.optInt("port",444)==444){config.put("uplink","rns.beleth.net").put("port",4242);getSharedPreferences("host",0).edit().putString("config",config.toString()).apply();}name.setText(config.optString("name","NomadKey Host"));uplink.setText(config.optString("uplink","rns.beleth.net"));port.setText(""+config.optInt("port",4242));sms.setChecked(config.optString("mode").equals("sms"));}catch(Exception ignored){}
         button(layout,"Start host",()->startHost());
         button(layout,"Stop host and close app",()->new AlertDialog.Builder(this).setMessage("Stop serving and revoke all current sessions? The app closes to reset Reticulum safely.").setPositiveButton("Stop",(d,w)->{stopService(new Intent(this,HostService.class));finish();}).setNegativeButton("Cancel",null).show());
         status=label(layout,HostService.state,15);status.setTextIsSelectable(true);

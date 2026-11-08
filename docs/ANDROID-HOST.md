@@ -1,18 +1,44 @@
-# NomadKey Host for Android — development build
+# NomadKey Host: your spare phone becomes a locked cupboard
 
-Use an old NFC-capable Android phone as a small private NomadNet server. Choose
-**Private page** or **SMS relay**. Columba remains the client. PiMonitor is not
-changed by installing this app.
+Imagine keeping your private notes and text messages in a locked cupboard at home.
+You want to read them while you are away, but you do not want everyone on the
+network to open the door.
 
-This is a development build, not an assured SIM-swap detector or a verified banking
-service. Do the device checklist below before relying on it.
+NomadKey Host turns a spare Android phone into that cupboard. Columba, on the phone
+you carry, is how you look inside. Your Flex or YubiKey is the key to the door.
+You first teach the Host which keys are allowed. Later, you tap an approved key
+and enter its PIN to open your private pages. The secret inside the key stays there.
 
-## Setup
+Why do this? A network address tells the Host which app is connecting. It does not
+prove who is holding the phone. NomadKey adds a separate check using your security
+key. You can use a different trusted phone and a new network identity without
+copying your usual identity onto it. You must still check that you opened the
+right site, and trust the phone and app you are using.
+
+The door closes after five minutes, even if you keep reading. **Forget me** closes
+it sooner. Opening another connection does not give it a free pass.
+
+Choose what the cupboard holds:
+
+- **Private pages:** notes or information you want to share only with approved keys.
+- **Text messages:** read the messages Android lets the Host see, two at a time.
+  Your everyday phone can receive a small alert saying who sent a message and when.
+  The alert does not include the message or its login code.
+
+The Host can also warn you when the SIM disappears, changes or loses service.
+That is a warning to investigate, not proof that somebody stole your number.
+Some Android phones hide login-code messages. This is still a development app,
+and these features need checking on your actual phones.
+
+## Setup and technical details
+
+### First setup
 
 1. Install NomadKey Host DEV on the server phone (Android 8/API 26 or later).
    Set a secure screen lock. Keep this phone under trusted local control.
-2. Choose a public site name and mode. The TCP default is `mh.beady.com:444`.
-   Press **Start host**. First launch, not package installation, starts setup.
+2. Choose a public site name and mode. The TCP default is **Beleth RNS Hub**, `rns.beleth.net:4242`, matching Columba's built-in server.
+   An upgrade replaces the old built-in `mh.beady.com:444` setting; other custom
+   settings are kept. Press **Start host**. First launch, not package installation, starts setup.
 3. The app first tries the standard local TCP shared RNS instance on port 37428.
    If available it attaches; otherwise it starts the official Python Reticulum
    stack with its own TCP uplink. A busy but unusable local port is an error.

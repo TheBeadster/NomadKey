@@ -99,7 +99,7 @@ class Runtime:
     def __init__(self,root,bridge,config):
         self.root=Path(root);self.root.mkdir(parents=True,exist_ok=True)
         self.bridge=bridge;self.config=config;self.stop=threading.Event();self.admin_lock=threading.Lock()
-        host=config.get('uplink','mh.beady.com');port=config.get('port',444)
+        host=config.get('uplink','rns.beleth.net');port=config.get('port',4242)
         if not re.fullmatch(r'[A-Za-z0-9.-]{1,253}',host) or type(port)!=int or not 1<=port<=65535:raise ValueError('invalid uplink')
         rnsdir=self.root/'rns';rnsdir.mkdir(exist_ok=True)
         (rnsdir/'config').write_text('[reticulum]\n share_instance = Yes\n shared_instance_type = tcp\n shared_instance_port = 37428\n instance_control_port = 37429\n enable_transport = No\n[interfaces]\n [[Host uplink]]\n type = TCPClientInterface\n enabled = Yes\n target_host = '+host+'\n target_port = '+str(port)+'\n',encoding='utf-8')

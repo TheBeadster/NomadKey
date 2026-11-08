@@ -1,26 +1,48 @@
-# NomadKey — development prototype
+# NomadKey: your security key opens your private pages
 
-**Use your key to prove you have access, whatever phone or computer you use.**
+**Keep your private information at home. Use your key to read it from another trusted phone.**
 
-Think of a Reticulum endpoint ID as the name your app uses on the network. It helps the site recognise the connection, but it does **not** prove which person is holding the phone. It is not a permanent label for the physical device either: you can create a new identity or move one between devices.
+Imagine a locked cupboard. You can see its door, but you need the right key to
+open it. NomadKey puts a door like that in front of private NomadNet pages.
+Your Flex or YubiKey is the key. You tap it, enter its PIN, and the site checks
+that it is a key the owner has approved. The secret inside the key never leaves it.
 
-NomadKey adds a second check using a **FIDO2 security key**, such as a VivoKey Flex or YubiKey. The site asks your key to prove it is one the administrator has already approved. You use the key and its PIN to answer. The secret inside the key never leaves it.
+Why is this useful? A network address tells the site which app is talking to it.
+It does not prove which person is holding the phone. NomadKey adds a separate
+check using your security key. Your access follows your approved key, so you can
+use a different trusted phone or a fresh network identity without copying your
+usual identity onto that phone.
 
-That means **your access follows your security key, not your endpoint ID**. You can use your own phone, a borrowed phone, or a new temporary Reticulum identity. You do not need to copy your usual identity onto that device. The site recognises the approved key and gives that connection access to the pages you are allowed to read.
+For example, leave a spare phone at home with **NomadKey Host** installed. Use
+**Columba** on the phone you carry to visit it. After you use your key, you can
+read a private page or the text messages that Android makes available on the
+home phone. Access closes after five minutes, even if you keep reading.
+**Forget me** closes it sooner.
 
-For example: borrow a phone with the NomadKey-enabled Columba app, open the site, authenticate with your Flex, and read your private pages. Access ends after five minutes by default, even if you keep browsing. Tap **Forget me** to end it sooner. A different connection must authenticate for itself.
+You can also ask for a small alert when a text arrives. It tells you who sent it
+and when, but leaves out the message and any login code. The Host can warn about
+a missing SIM or lost service too. That is a warning to check the phone, not
+proof of a stolen phone number.
 
-The key proves that you can use an approved credential; the administrator decides whose key it is and what it may access. NomadKey protects NomadNet pages. A separate experimental Android Host now adds an optional protected SMS inbox and sender-only alerts; banking integration remains outside scope.
+The aim is simple: **let an approved key unlock temporary access, without making
+a permanent network identity your password.** You still need a trustworthy phone
+and app, and you must check that you opened the genuine site.
 
-**Development build.** The user confirmed Android/Flex authentication, five-minute expiry denial and Forget me denial on 4 November 2026. YubiKey and PC hardware remain untested. Existing estate pages remain on their original service. The protected destination now serves live, read-only PiMonitor host status. Follow [status](docs/STATUS.md) for actual checks and outstanding limitations.
+This is a **development project**. Some Android phones hide login-code messages.
+The new Host app still needs real-phone NFC, SMS and alert tests. Banking
+integration is not included. The technical explanation and test details follow below.
 
 ## Android download
 
-**New Android Host experiment:** turn a spare NFC Android phone into a secure page server or SMS relay. [Download Host dev1 and paired Columba dev9](https://github.com/TheBeadster/NomadKey/releases/tag/nomadkey-host-dev1). See [setup, platform limits and physical test checklist](docs/ANDROID-HOST.md) and [software validation](docs/HOST-DEV1-VALIDATION.md). This is a separate app, with a new service identity and new key enrolment; it does not change PiMonitor.
+**New Android Host experiment:** turn a spare NFC Android phone into a secure page server or SMS relay. [Download Host dev2](https://github.com/TheBeadster/NomadKey/releases/tag/nomadkey-host-dev2). See [setup, platform limits and physical test checklist](docs/ANDROID-HOST.md) and [dev2 changes and checks](docs/HOST-DEV2.md). This is a separate app, with a new service identity and new key enrolment; it does not change PiMonitor.
 
-Get the [NomadKey-enabled Columba development APK](https://github.com/TheBeadster/NomadKey/releases/tag/nomadkey-dev8) and follow the [installation and NFC instructions](docs/ANDROID_DEV8.md). Use dev6 or newer for a Flex that also stores a website. Upgrade the existing Columba NomadKey DEV app in place; existing enrolled keys remain valid. New users still need trusted administrator enrollment and permission: installing this app alone does not unlock a protected site.
+Get the [NomadKey-enabled Columba development APK](https://github.com/TheBeadster/NomadKey/releases/tag/nomadkey-host-dev1) and follow the [installation and NFC instructions](docs/ANDROID_DEV8.md). Use dev6 or newer for a Flex that also stores a website. Upgrade the existing Columba NomadKey DEV app in place; existing enrolled keys remain valid. New users still need trusted administrator enrollment and permission: installing this app alone does not unlock a protected site.
 
 The backend, protocol and tests are on this branch. Columba changes are on [columba/nomadkey-development](https://github.com/TheBeadster/NomadKey/tree/columba/nomadkey-development). APKs are development builds with published checksums, not official upstream Columba releases.
+
+## Technical explanation
+
+Reticulum provides authenticated encrypted transport. FIDO2 separately proves control of an enrolled credential; the administrator assigns its permissions. A session is bound to the genuine service, the requesting link and client public key, a fresh challenge, permitted actions and an absolute expiry. It is not a general identity allowlist.
 
 ## Implemented
 

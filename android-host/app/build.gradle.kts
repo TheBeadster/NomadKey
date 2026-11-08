@@ -6,8 +6,8 @@ android {
         applicationId = "org.nomadkey.host.dev"
         minSdk = 26
         targetSdk = 36
-        versionCode = 1
-        versionName = "0.1-dev1"
+        versionCode = 2
+        versionName = "0.1-dev2"
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
         ndk { abiFilters += listOf("arm64-v8a", "armeabi-v7a", "x86_64") }
     }
@@ -22,7 +22,7 @@ chaquopy {
     defaultConfig {
         version = "3.11"
         pip {
-            install(rootProject.file("vendor/nomadkey-0.1.0.dev9-py3-none-any.whl").absolutePath)
+            install(rootProject.file("vendor/nomadkey-0.1.0.dev10-py3-none-any.whl").absolutePath)
             install("rns==1.5.7")
             install("lxmf==1.2.1")
             install("cryptography==42.0.8")
