@@ -56,10 +56,13 @@ class NomadNetBrowserViewModel
         val nomadKeyRemaining: StateFlow<Long> = _nomadKeyRemaining.asStateFlow()
         private val _nomadKeyMessage = MutableStateFlow("")
         val nomadKeyMessage: StateFlow<String> = _nomadKeyMessage.asStateFlow()
+        private val _nomadKeyNotifications = MutableStateFlow(false)
+        val nomadKeyNotifications: StateFlow<Boolean> = _nomadKeyNotifications.asStateFlow()
         @Volatile private var nomadKeyDeadline = 0L
         @Volatile var nomadKeyNfcPending = false
             private set
         private var ceremonyNode = ""
+        private var ceremonyAction = "begin"
         private var statePoll = false
         private var nomadKeyMonitor: kotlinx.coroutines.Job? = null
 
@@ -96,15 +99,17 @@ class NomadNetBrowserViewModel
             }
         }
 
-        fun beginNomadKey(pin: String, ready: () -> Unit) {
+        fun beginNomadKey(pin: String, action: String = "begin", ready: () -> Unit) {
+            require(action in setOf("begin", "subscribe", "unsubscribe"))
             if(nomadKeyNfcPending || currentNodeHash !in nomadKeyNodes) return
+            ceremonyAction=action
             ceremonyNode=currentNodeHash; nomadKeyNfcPending=true
             _browserState.value=BrowserState.Loading("Preparing NFC authentication…")
             _nomadKeyMessage.value="Preparing NFC authentication…"
             val node=ceremonyNode
             viewModelScope.launch(Dispatchers.IO) {
                 try {
-                    val request=nomadnet.nomadkeyOperation(node,"begin").getOrThrow()
+                    val request=nomadnet.nomadkeyOperation(node,action).getOrThrow()
                     if(!nomadKeyNfcPending || currentNodeHash!=node) return@launch
                     network.columba.app.rns.api.NomadKeyCeremony.prepare(request,pin)
                     kotlinx.coroutines.withContext(Dispatchers.Main) { ready() }
@@ -130,6 +135,13 @@ class NomadNetBrowserViewModel
                 try {
                     val value=org.json.JSONObject(nomadnet.nomadkeyOperation(node,"complete",response).getOrThrow())
                     check(value.optBoolean("ok"))
+                    if(ceremonyAction!="begin") {
+                        check(value.getJSONObject("operation").getString("notifications")==ceremonyAction && !value.has("expires_in"))
+                        check(fetchEpoch==epoch && currentNodeHash==node)
+                        _nomadKeyMessage.value=if(ceremonyAction=="subscribe") "This device is registered for sender/time alerts. Browsing expiry is unchanged." else "This device was removed from notifications."
+                        loadPage(node,"/page/alerts.mu")
+                        return@launch
+                    }
                     val state=org.json.JSONObject(nomadnet.nomadkeyOperation(node,"state").getOrThrow())
                     val millis=(state.getDouble("remaining")*1000).toLong()
                     check(millis>0 && fetchEpoch==epoch && currentNodeHash==node)
@@ -164,6 +176,7 @@ class NomadNetBrowserViewModel
         }
 
         private suspend fun acceptNomadKeyPage(node: String, content: String): Boolean {
+            _nomadKeyNotifications.value=content.startsWith("#!nomadkey-v1 private\n#!c=0\n#!nomadkey-notifications v1\n")
             if(!content.startsWith("#!nomadkey-v1") && node !in nomadKeyNodes) return true
             nomadKeyNodes.add(node); _nomadKeyEnabled.value=true
             pageCache.remove(node,DEFAULT_PATH)

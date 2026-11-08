@@ -1,21 +1,17 @@
 # NomadKey SDK provenance
 
-The Python backend installs `nomadkey-0.1.0.dev7-py3-none-any.whl` from this
-directory. Its source is the main branch of
-https://github.com/TheBeadster/NomadKey at commit
-`1990ab124b5c495638e6cff77269056c17074ed0`.
+The Python backend installs `nomadkey-0.1.0.dev9-py3-none-any.whl` from this directory.
+Source: https://github.com/TheBeadster/NomadKey/tree/ab6cdafef49d44a55d562858ba34bce5d0edd337
 
-Wheel SHA-256:
-`34bba21add0bf89c746c1415cb06a8abeeae9429e529dc856dfb1f735422a73f`.
+Wheel SHA-256: `d579bdb03d64cc001a2b81c5e93ae2cf5dff611ca79fb10e62097c6fa238ec09`.
 
 Build with Python 3.11: `python -m pip wheel . --no-deps -w <columba>/vendor`.
-The SDK keeps protocol and CTAP2 logic outside Columba's slim Python adapter
-tree. Dev7 adds protected NFC saved-site storage; the existing site-login
-protocol and server expiry are unchanged. See the SDK's `docs/NFC_BOOKMARKS.md`
-for the format, requirements, recovery limitations and physical test checklist.
+The external SDK keeps protocol and CTAP2 logic outside the slim Columba Python adapter.
+Dev9 adds fresh operation-bound notification subscriptions for the separate Android Host.
+The browsing protocol and five-minute absolute expiry remain unchanged. An alert
+subscription does not grant page access or renew an existing browsing session.
 
-Columba uses the existing Python Reticulum backend. This feature branch is based
-on official Columba commit `87b513e60a7b0fce8895f138d11949e4fcfa1e0f`.
-Physical dev7 bookmark tests remain pending; simulated tests are not hardware
-evidence. Earlier wheels remain for historical reproducibility and are not
-installed by the current build configuration.
+Official Columba base: `87b513e60a7b0fce8895f138d11949e4fcfa1e0f`.
+The earlier user-confirmed Flex/PiMonitor flow is separate from the new Host app;
+new host NFC enrolment, carrier SMS/OTP access and real LXMF notification delivery
+still require physical tests. Older wheels remain only for historical reproducibility.

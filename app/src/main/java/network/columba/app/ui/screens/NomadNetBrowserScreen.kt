@@ -169,7 +169,9 @@ fun NomadNetBrowserScreen(
     val nomadKeyEnabled by viewModel.nomadKeyEnabled.collectAsState()
     val nomadKeyRemaining by viewModel.nomadKeyRemaining.collectAsState()
     val nomadKeyMessage by viewModel.nomadKeyMessage.collectAsState()
+    val nomadKeyNotifications by viewModel.nomadKeyNotifications.collectAsState()
     var showNfcDialog by remember { mutableStateOf(false) }
+    var nfcAction by remember { mutableStateOf("begin") }
     var nfcPin by remember { mutableStateOf("") }
     var serviceVerified by remember { mutableStateOf(false) }
     val nfcLauncher=rememberLauncherForActivityResult(ActivityResultContracts.StartActivityForResult()) {
@@ -200,7 +202,7 @@ fun NomadNetBrowserScreen(
         androidx.compose.material3.AlertDialog(
             onDismissRequest={showNfcDialog=false;nfcPin=""},
             icon={Icon(Icons.Default.Fingerprint,contentDescription=null)},
-            title={Text("Authenticate with NFC key")},
+            title={Text(when(nfcAction) { "subscribe" -> "Register this device for alerts"; "unsubscribe" -> "Remove this device from alerts"; else -> "Authenticate with NFC key" })},
             text={Column(verticalArrangement=Arrangement.spacedBy(12.dp)) {
                 Text("Verify the full site address before using your key:")
                 Text(node,fontFamily=FontFamily.Monospace)
@@ -209,11 +211,11 @@ fun NomadNetBrowserScreen(
                     Text("I recognise and trust this site")
                 }
                 OutlinedTextField(value=nfcPin,onValueChange={nfcPin=it},label={Text("FIDO2 PIN")},singleLine=true,keyboardOptions=KeyboardOptions(keyboardType=androidx.compose.ui.text.input.KeyboardType.Password,autoCorrectEnabled=false),visualTransformation=PasswordVisualTransformation())
-                Text("Use your enrolled Flex or YubiKey. Access lasts five minutes; browsing never extends it.")
+                Text(if(nfcAction=="begin") "Use your enrolled Flex or YubiKey. Access lasts five minutes; browsing never extends it." else "Approve this specific notification change with your key. Alerts include sender and time, never the SMS body or code. Browsing expiry will not change.")
             }},
             confirmButton={TextButton(enabled=serviceVerified && node.isNotEmpty(),onClick={
                 val value=nfcPin;nfcPin="";showNfcDialog=false
-                viewModel.beginNomadKey(value) {
+                viewModel.beginNomadKey(value,nfcAction) {
                     nfcLauncher.launch(Intent().setClassName(context.packageName,"network.columba.app.rns.backend.py.NomadKeyNfcActivity"))
                 }
             }) {Text("Tap NFC key")}},
@@ -325,11 +327,15 @@ fun NomadNetBrowserScreen(
             text = {
                 Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
                     if(nomadKeyEnabled) {
-                        TextButton(onClick={showIdentifyConfirm=false;serviceVerified=false;showNfcDialog=true}) {
+                        TextButton(onClick={showIdentifyConfirm=false;serviceVerified=false;nfcAction="begin";showNfcDialog=true}) {
                             Icon(Icons.Default.Fingerprint,contentDescription=null)
                             Text("Authenticate with NFC key")
                         }
                         Text("Normal identification alone does not unlock this site.")
+                        if(nomadKeyRemaining>0 && nomadKeyNotifications) {
+                            TextButton(onClick={showIdentifyConfirm=false;serviceVerified=false;nfcAction="subscribe";showNfcDialog=true}) { Text("Register this device for SMS/SIM alerts") }
+                            TextButton(onClick={showIdentifyConfirm=false;serviceVerified=false;nfcAction="unsubscribe";showNfcDialog=true}) { Text("Remove this device from alerts") }
+                        }
                         HorizontalDivider()
                     }
                     Text(

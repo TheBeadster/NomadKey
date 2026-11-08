@@ -49,7 +49,7 @@ class PythonRnsNomadnet(
     private val nomadKeyNodes = java.util.concurrent.ConcurrentHashMap.newKeySet<String>()
     override suspend fun nomadkeyOperation(destinationHash: String, operation: String, payload: String): Result<String> = pyResult {
         runtime.requireRunning()
-        require(operation in setOf("probe", "begin", "complete", "forget", "state", "identity") && payload.length <= 16384)
+        require(operation in setOf("probe", "begin", "subscribe", "unsubscribe", "complete", "forget", "state", "identity") && payload.length <= 16384)
         val link = nomadnetLinks[destinationHash] ?: error("Open the site first")
         require(linkStatus(link) == LINK_ACTIVE) { "Connection closed; authenticate again" }
         verifyPinnedLink(destinationHash, link)
