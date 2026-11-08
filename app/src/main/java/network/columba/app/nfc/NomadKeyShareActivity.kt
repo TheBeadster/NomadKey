@@ -157,7 +157,7 @@ class NomadKeyShareActivity : Activity(),NfcAdapter.ReaderCallback {
         if(result==null) { showFailure(failure);return }
         active=false;ui.removeCallbacks(timeout);progress.visibility=View.GONE
         val writing=destination!=null
-        status.text=if(writing) "Success — written and read back.\n\n$result\n\nMove the tag away, then Continue. Anyone can read this public address."
+        status.text=if(writing) "Success: address verified on tag.\n\n$result\n\nMove the tag away, then Continue. Anyone can read this public address."
             else "Shared address — not verified\n\n$result\n\nMove the tag away, then Open site. This does not save trust or log you in."
         button.text=if(writing) "Continue" else "Open site"
         button.setOnClickListener {
