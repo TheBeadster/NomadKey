@@ -154,6 +154,11 @@ fun NomadNetBrowserScreen(
 
     val context = LocalContext.current
     var bookmarkSite by remember { mutableStateOf<String?>(null) }
+    var tagSite by remember { mutableStateOf<String?>(null) }
+    tagSite?.let { site ->
+        network.columba.app.ui.components.NomadKeyTagFlow(
+            destination=org.json.JSONObject(site).getString("destination"),onDismiss={tagSite=null},onFido={bookmarkSite=site})
+    }
     bookmarkSite?.let { site ->
         network.columba.app.ui.components.NomadKeyBookmarkDialog(action="save",siteJson=site,
             onDismiss={bookmarkSite=null},onComplete={
@@ -546,9 +551,9 @@ fun NomadNetBrowserScreen(
                             expanded = showMenu,
                             onDismissRequest = { showMenu = false },
                         ) {
-                            DropdownMenuItem(text={Text("Save verified site to NFC key")},
+                            DropdownMenuItem(text={Text("Save site to NFC")},
                                 enabled=browserState is BrowserState.PageLoaded,
-                                onClick={showMenu=false;viewModel.prepareNfcBookmark { bookmarkSite=it }})
+                                onClick={showMenu=false;viewModel.prepareNfcBookmark { tagSite=it }})
                             HorizontalDivider()
                             // Copy URL — derive from compose state
                             val shareableUrl =

@@ -2,6 +2,9 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:tools="http://schemas.android.com/tools">
 
+    <uses-permission android:name="android.permission.NFC" />
+    <uses-feature android:name="android.hardware.nfc" android:required="false" />
+
     <uses-sdk tools:overrideLibrary="network.reticulum.android" />
 
     <!-- Network permissions for Reticulum -->
@@ -105,6 +108,8 @@
         android:roundIcon="@mipmap/ic_launcher_round"
         android:supportsRtl="true"
         android:theme="@style/Theme.Columba.Splash">
+        <activity android:name=".nfc.NomadKeyShareActivity" android:exported="false"
+            android:excludeFromRecents="true" android:theme="@android:style/Theme.Material.Dialog.NoActionBar" />
         <activity
             android:name=".MainActivity"
             android:exported="true"

@@ -109,6 +109,8 @@ fun AnnounceStreamScreen(
     val announceError by viewModel.announceError.collectAsState()
     val context = LocalContext.current
     var readNfcAddress by remember { mutableStateOf(false) }
+    var detectNfcAddress by remember { mutableStateOf(false) }
+    if(detectNfcAddress) network.columba.app.ui.components.NomadKeyTagFlow(onDismiss={detectNfcAddress=false},onOpen=onOpenNfcSite,onFido={readNfcAddress=true})
     var savedNfcSites by remember { mutableStateOf(false) }
     if(readNfcAddress) network.columba.app.ui.components.NomadKeyBookmarkDialog(
         action="read",onDismiss={readNfcAddress=false},onComplete={onOpenNfcSite(it.destination)})
@@ -227,7 +229,7 @@ fun AnnounceStreamScreen(
                             expanded = showOverflowMenu,
                             onDismissRequest = { showOverflowMenu = false },
                         ) {
-                            DropdownMenuItem(text={Text("Read NFC saved address")},onClick={showOverflowMenu=false;readNfcAddress=true})
+                            DropdownMenuItem(text={Text("Read NFC address")},onClick={showOverflowMenu=false;detectNfcAddress=true})
                             DropdownMenuItem(text={Text("Saved NFC sites")},onClick={showOverflowMenu=false;savedNfcSites=true})
                             HorizontalDivider()
                             DropdownMenuItem(
