@@ -35,8 +35,10 @@ def test_queue_bounds_and_delivered_cleanup(meta):
     for i in range(256):assert state.enqueue('metadata')
     assert not state.enqueue('overflow')
     assert state.get('dropped_alerts')==1
+    last_id=state.db.execute('SELECT max(id) FROM alerts').fetchone()[0]
     with state.db:state.db.execute("UPDATE delivery SET state='delivered'")
     assert state.enqueue('new')
+    assert state.db.execute('SELECT max(id) FROM alerts').fetchone()[0]>last_id
     assert state.db.execute('SELECT count(*) FROM alerts').fetchone()[0]==1
     now[0]+=86401
     assert state.enqueue('newer')

@@ -165,8 +165,10 @@ class Runtime:
                 msg=self.LXMF.LXMessage(dest,self.source,body,title='NomadKey notification',desired_method=self.LXMF.LXMessage.DIRECT)
                 self.inflight[(aid,client)]=(msg,time.monotonic())
                 meta.db.execute("UPDATE delivery SET state='sending',attempts=attempts+1 WHERE alert=? AND client=?",(aid,client))
-                def finish(success,aid=aid,client=client):
+                def finish(success,aid=aid,client=client,msg=msg):
                     with meta.lock,meta.db:
+                        current=self.inflight.get((aid,client))
+                        if current is None or current[0] is not msg:return
                         self.inflight.pop((aid,client),None)
                         meta.db.execute('UPDATE delivery SET state=?,next=? WHERE alert=? AND client=?',('delivered' if success else 'queued',time.time()+60,aid,client))
                 msg.register_delivery_callback(lambda m,f=finish:f(True))

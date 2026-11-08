@@ -27,7 +27,7 @@ class HostState:
         self.db.executescript('''
           CREATE TABLE IF NOT EXISTS settings(k TEXT PRIMARY KEY,v TEXT NOT NULL);
           CREATE TABLE IF NOT EXISTS subscribers(client TEXT PRIMARY KEY,credential TEXT NOT NULL,destination TEXT NOT NULL);
-          CREATE TABLE IF NOT EXISTS alerts(id INTEGER PRIMARY KEY,content TEXT NOT NULL,created REAL NOT NULL);
+          CREATE TABLE IF NOT EXISTS alerts(id INTEGER PRIMARY KEY AUTOINCREMENT,content TEXT NOT NULL,created REAL NOT NULL);
           CREATE TABLE IF NOT EXISTS delivery(alert INTEGER,client TEXT,state TEXT DEFAULT 'queued',attempts INTEGER DEFAULT 0,next REAL DEFAULT 0,PRIMARY KEY(alert,client));
         ''')
         self.db.execute("UPDATE delivery SET state='queued' WHERE state='sending'")
