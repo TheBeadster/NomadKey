@@ -153,6 +153,14 @@ fun NomadNetBrowserScreen(
     val coroutineScope = rememberCoroutineScope()
 
     val context = LocalContext.current
+    var bookmarkSite by remember { mutableStateOf<String?>(null) }
+    bookmarkSite?.let { site ->
+        network.columba.app.ui.components.NomadKeyBookmarkDialog(action="save",siteJson=site,
+            onDismiss={bookmarkSite=null},onComplete={
+                viewModel.setNfcPinnedSites(network.columba.app.rns.api.NomadKeyPins.all(context).map { it.destination }.toSet())
+                viewModel.refresh()
+            })
+    }
     val nomadKeyEnabled by viewModel.nomadKeyEnabled.collectAsState()
     val nomadKeyRemaining by viewModel.nomadKeyRemaining.collectAsState()
     val nomadKeyMessage by viewModel.nomadKeyMessage.collectAsState()
@@ -217,6 +225,10 @@ fun NomadNetBrowserScreen(
 
     // Load initial page
     LaunchedEffect(destinationHash, initialPath) {
+        val pins=runCatching { network.columba.app.rns.api.NomadKeyPins.all(context) }.getOrElse {
+            viewModel.savedTrustUnavailable();return@LaunchedEffect
+        }
+        viewModel.setNfcPinnedSites(pins.map { it.destination }.toSet())
         if (browserState is BrowserState.Initial && destinationHash.isNotEmpty()) {
             viewModel.loadPage(destinationHash, initialPath)
         }
@@ -387,6 +399,9 @@ fun NomadNetBrowserScreen(
     Scaffold(
         bottomBar = {
             if(nomadKeyEnabled) Column(Modifier.fillMaxWidth().background(MaterialTheme.colorScheme.surface).padding(12.dp)) {
+                val shownNode=(browserState as? BrowserState.PageLoaded)?.nodeHash
+                val saved=shownNode?.let { runCatching { network.columba.app.rns.api.NomadKeyPins.find(context,it) }.getOrNull() }
+                Text(if(saved!=null) "Saved NFC identity: ${saved.name}" else "Site identity not saved from NFC",style=MaterialTheme.typography.bodySmall)
                 Row(Modifier.fillMaxWidth(),verticalAlignment=Alignment.CenterVertically,horizontalArrangement=Arrangement.SpaceBetween) {
                     Text(if(nomadKeyRemaining>0) "Access ${nomadKeyRemaining/60}:${(nomadKeyRemaining%60).toString().padStart(2,'0')}" else "Authentication required")
                     TextButton(onClick={viewModel.forgetNomadKey()}) { Text("Forget me") }
@@ -531,6 +546,10 @@ fun NomadNetBrowserScreen(
                             expanded = showMenu,
                             onDismissRequest = { showMenu = false },
                         ) {
+                            DropdownMenuItem(text={Text("Save verified site to NFC key")},
+                                enabled=browserState is BrowserState.PageLoaded,
+                                onClick={showMenu=false;viewModel.prepareNfcBookmark { bookmarkSite=it }})
+                            HorizontalDivider()
                             // Copy URL — derive from compose state
                             val shareableUrl =
                                 (browserState as? BrowserState.PageLoaded)?.let {

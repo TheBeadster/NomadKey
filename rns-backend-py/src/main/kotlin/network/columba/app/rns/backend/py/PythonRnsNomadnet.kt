@@ -49,9 +49,14 @@ class PythonRnsNomadnet(
     private val nomadKeyNodes = java.util.concurrent.ConcurrentHashMap.newKeySet<String>()
     override suspend fun nomadkeyOperation(destinationHash: String, operation: String, payload: String): Result<String> = pyResult {
         runtime.requireRunning()
-        require(operation in setOf("probe", "begin", "complete", "forget", "state") && payload.length <= 16384)
+        require(operation in setOf("probe", "begin", "complete", "forget", "state", "identity") && payload.length <= 16384)
         val link = nomadnetLinks[destinationHash] ?: error("Open the site first")
         require(linkStatus(link) == LINK_ACTIVE) { "Connection closed; authenticate again" }
+        verifyPinnedLink(destinationHash, link)
+        if (operation == "identity") return@pyResult JSONObject()
+            .put("destination", destinationHash)
+            .put("public_key", link["destination"]!!["identity"]!!.callAttr("get_public_key").callAttr("hex").toString())
+            .put("name", "Saved NomadNet site").toString()
         val identity = runtime.localIdentity ?: error("Client identity unavailable")
         val result = com.chaquo.python.Python.getInstance().getModule("nomadkey.browser")
             .callAttr("operation", link, identity, operation, payload).toString()
@@ -320,8 +325,10 @@ class PythonRnsNomadnet(
         generation: Int,
         requestDeadlineMs: Long,
     ): PyObject {
+        runtime.verifyNomadKeyPin(destinationHash,nodeIdentity,false)
         nomadnetLinks[destinationHash]?.let { existing ->
             if ((testLinkStatus?.invoke(existing) ?: linkStatus(existing)) == LINK_ACTIVE) {
+                verifyPinnedLink(destinationHash, existing)
                 Log.i(TAG, "NomadNet: reusing active link to $destinationHash")
                 identifyIfFlagged(destinationHash, existing)
                 return existing
@@ -347,6 +354,7 @@ class PythonRnsNomadnet(
             generation,
         )
         if (firstResult != null) {
+            verifyPinnedLink(destinationHash, firstResult)
             nomadnetLinks[destinationHash] = firstResult
             Log.i(TAG, "NomadNet: link established to $destinationHash")
             identifyIfFlagged(destinationHash, firstResult)
@@ -374,6 +382,7 @@ class PythonRnsNomadnet(
             generation,
         )
         if (retryResult != null) {
+            verifyPinnedLink(destinationHash, retryResult)
             nomadnetLinks[destinationHash] = retryResult
             Log.i(TAG, "NomadNet: link established on retry to $destinationHash")
             identifyIfFlagged(destinationHash, retryResult)
@@ -386,6 +395,10 @@ class PythonRnsNomadnet(
      * Build the `nomadnetwork.node` destination and construct an `RNS.Link`.
      * Overridable via [testCreateNodeLink] for unit tests.
      */
+    private fun verifyPinnedLink(destination: String, link: PyObject) {
+        runtime.verifyNomadKeyPin(destination,link,true)
+    }
+
     private fun createNodeLink(nodeIdentity: PyObject): PyObject {
         testCreateNodeLink?.let { return it(nodeIdentity) }
         val destClass = runtime.rnsModule["Destination"] ?: error("RNS.Destination missing")

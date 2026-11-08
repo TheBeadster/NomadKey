@@ -60,6 +60,17 @@ class NomadNetBrowserViewModelTest {
     private val nodeHash = "abcdef01234567890abcdef012345678"
     private val simplePage = ">Hello World"
 
+    @Test
+    fun `NFC pinned site never opens cached content`() = runTest(testDispatcher) {
+        viewModel.setNfcPinnedSites(setOf(nodeHash))
+        viewModel.loadPage(nodeHash)
+        Thread.sleep(250)
+        advanceUntilIdle()
+        verify(exactly=0) { pageCache.get(any(),any()) }
+        verify(exactly=0) { pageCache.put(any(),any(),any(),any()) }
+        coVerify { protocol.requestNomadnetPage(nodeHash,any(),any(),any()) }
+    }
+
     @Before
     fun setUp() {
         Dispatchers.setMain(testDispatcher)

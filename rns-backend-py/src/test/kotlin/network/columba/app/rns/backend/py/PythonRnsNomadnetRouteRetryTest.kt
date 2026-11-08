@@ -1,6 +1,9 @@
 package network.columba.app.rns.backend.py
 
 import com.chaquo.python.PyObject
+import io.mockk.every
+import io.mockk.just
+import io.mockk.Runs
 import io.mockk.mockk
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.withTimeout
@@ -40,6 +43,23 @@ import org.junit.Test
  */
 class PythonRnsNomadnetRouteRetryTest {
 
+    @Test
+    fun `pin failure prevents link creation and route retry`() = runTest {
+        val runtime=mockk<PythonRnsRuntime>()
+        every { runtime.verifyNomadKeyPin(any(),any(),any()) } throws IllegalArgumentException("identity mismatch")
+        val subject=PythonRnsNomadnet(runtime)
+        var created=false
+        subject.testCreateNodeLink={ created=true;raw(1L) }
+        try {
+            subject.establishLink("aabbcc",raw(2L),1f,subject.testBeginRequest(),Long.MAX_VALUE)
+            org.junit.Assert.fail("mismatched pin accepted")
+        } catch(e:IllegalArgumentException) {
+            assertEquals("identity mismatch",e.message)
+        }
+        org.junit.Assert.assertFalse(created)
+        assertTrue(subject.nomadnetLinks.isEmpty())
+    }
+
     private val destinationHex = "aabbcc"
 
     /** Nonzero address -> real PyObject instance (no native method called). */
@@ -73,6 +93,7 @@ class PythonRnsNomadnetRouteRetryTest {
     fun `when first link budget exhausts the backend requests a path and the retry link is cached`() =
         runTest {
             val runtime = mockk<PythonRnsRuntime>()
+            every { runtime.verifyNomadKeyPin(any(),any(),any()) } just Runs
             val subject = PythonRnsNomadnet(runtime = runtime)
             val driver = TransportDriver(destinationHex.hexToBytes())
             val tornDown = mutableListOf<PyObject>()
@@ -126,6 +147,7 @@ class PythonRnsNomadnetRouteRetryTest {
     fun `when the route never appears establishLink fails and caches nothing`() =
         runTest {
             val runtime = mockk<PythonRnsRuntime>()
+            every { runtime.verifyNomadKeyPin(any(),any(),any()) } just Runs
             val subject = PythonRnsNomadnet(runtime = runtime)
             val driver = TransportDriver(destinationHex.hexToBytes())
             driver.forceRouteAbsent = true
@@ -180,6 +202,7 @@ class PythonRnsNomadnetRouteRetryTest {
     fun `when the route appears but the retry link also exhausts both links are torn down and nothing is cached`() =
         runTest {
             val runtime = mockk<PythonRnsRuntime>()
+            every { runtime.verifyNomadKeyPin(any(),any(),any()) } just Runs
             val subject = PythonRnsNomadnet(runtime = runtime)
             val driver = TransportDriver(destinationHex.hexToBytes())
             val tornDown = mutableListOf<PyObject>()
@@ -225,6 +248,7 @@ class PythonRnsNomadnetRouteRetryTest {
     fun `when the request coroutine is cancelled while awaiting a link the link is torn down and nothing is cached`() =
         runTest {
             val runtime = mockk<PythonRnsRuntime>()
+            every { runtime.verifyNomadKeyPin(any(),any(),any()) } just Runs
             val subject = PythonRnsNomadnet(runtime = runtime)
             val tornDown = mutableListOf<PyObject>()
 

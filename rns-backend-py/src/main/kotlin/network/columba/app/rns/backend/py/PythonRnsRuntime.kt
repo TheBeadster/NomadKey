@@ -38,6 +38,11 @@ class PythonRnsRuntime(
     private val appContext: Context,
     private val stampGenerator: StampGenerator = StampGenerator(),
 ) {
+    fun verifyNomadKeyPin(destination: String, value: PyObject, isLink: Boolean) {
+        val identity=if(isLink) value["destination"]!!["identity"]!! else value
+        val key=identity.callAttr("get_public_key").callAttr("hex").toString()
+        network.columba.app.rns.api.NomadKeyPins.verify(appContext,destination,key)
+    }
     private companion object {
         const val TAG = "PythonRnsRuntime"
     }

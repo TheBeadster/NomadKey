@@ -47,6 +47,9 @@ class NomadNetBrowserViewModel
         private val rnsCore: RnsCore,
     ) : ViewModel() {
         private val nomadKeyNodes = java.util.concurrent.ConcurrentHashMap.newKeySet<String>()
+        private val nfcPinnedNodes = java.util.concurrent.ConcurrentHashMap.newKeySet<String>()
+        fun setNfcPinnedSites(nodes: Set<String>) { nfcPinnedNodes.clear();nfcPinnedNodes.addAll(nodes) }
+        fun savedTrustUnavailable() { _browserState.value=BrowserState.Error("Saved site trust data is damaged. No cached page or alternate site will be opened.") }
         private val _nomadKeyEnabled = MutableStateFlow(false)
         val nomadKeyEnabled: StateFlow<Boolean> = _nomadKeyEnabled.asStateFlow()
         private val _nomadKeyRemaining = MutableStateFlow(0L)
@@ -80,6 +83,16 @@ class NomadNetBrowserViewModel
                         }
                     }
                 }
+            }
+        }
+
+        fun prepareNfcBookmark(ready: (String) -> Unit) {
+            val node=currentNodeHash
+            viewModelScope.launch(Dispatchers.IO) {
+                try {
+                    val identity=nomadnet.nomadkeyOperation(node,"identity").getOrThrow()
+                    kotlinx.coroutines.withContext(Dispatchers.Main) { if(currentNodeHash==node) ready(identity) }
+                } catch(_:Exception) { _nomadKeyMessage.value="Could not read the current service identity. Reopen the site before saving." }
             }
         }
 
@@ -646,7 +659,7 @@ class NomadNetBrowserViewModel
             // the cache is served (possibly anonymous); the backend's
             // identifyIfFlagged fires on the next fetch (any navigation or
             // refresh), which is immediate for a user interacting with the page.
-            val bypassCache = destinationHash in _autoIdentifyNodes.value || destinationHash in nomadKeyNodes
+            val bypassCache = destinationHash in _autoIdentifyNodes.value || destinationHash in nomadKeyNodes || destinationHash in nfcPinnedNodes
             val cached = if (bypassCache) null else pageCache.get(destinationHash, requestPath)
             if (cached != null) {
                 fetchEpoch++ // Invalidate any in-flight request
@@ -722,7 +735,7 @@ class NomadNetBrowserViewModel
                 // and the fresh fetch establishes/reuses the link so the backend
                 // identifies at link establishment and the node serves identified
                 // content.
-                val bypassCache = nodeHash in _autoIdentifyNodes.value || nodeHash in nomadKeyNodes
+                val bypassCache = nodeHash in _autoIdentifyNodes.value || nodeHash in nomadKeyNodes || nodeHash in nfcPinnedNodes
                 val cached = if (bypassCache) null else pageCache.get(nodeHash, path)
                 if (cached != null) {
                     fetchEpoch++ // Invalidate any in-flight request
@@ -891,6 +904,11 @@ class NomadNetBrowserViewModel
             }
             currentNodeHash = entry.nodeHash
             _formFields.value = entry.formFields
+            if(entry.nodeHash in nfcPinnedNodes) {
+                _formFields.value=emptyMap()
+                fetchPage(entry.nodeHash,DEFAULT_PATH,cacheResponse=false)
+                return true
+            }
             // Instant back-navigation using the stored document
             emitPageLoaded(entry.document, entry.path, entry.nodeHash, entry.fieldTokens)
             // A flagged node must never display content fetched while unflagged
@@ -1395,7 +1413,7 @@ class NomadNetBrowserViewModel
                                 }
                                 if(fetchEpoch!=epoch) return@fold
                                 val document = MicronParser.parse(pageResult.content)
-                                if (cacheResponse && nodeHash !in nomadKeyNodes) {
+                                if (cacheResponse && nodeHash !in nomadKeyNodes && nodeHash !in nfcPinnedNodes) {
                                     pageCache.put(nodeHash, pageResult.path, pageResult.content, document.cacheTime)
                                 }
                                 emitPageLoaded(document, pageResult.path, nodeHash)

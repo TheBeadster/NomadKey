@@ -79,6 +79,7 @@ import network.columba.app.viewmodel.AnnounceStreamViewModel
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun AnnounceStreamScreen(
+    onOpenNfcSite: (String) -> Unit = {},
     onPeerClick: (destinationHash: String, peerName: String) -> Unit = { _, _ -> },
     onStartChat: (destinationHash: String, peerName: String) -> Unit = { _, _ -> },
     initialFilterType: String? = null,
@@ -107,6 +108,12 @@ fun AnnounceStreamScreen(
     val announceSuccess by viewModel.announceSuccess.collectAsState()
     val announceError by viewModel.announceError.collectAsState()
     val context = LocalContext.current
+    var readNfcAddress by remember { mutableStateOf(false) }
+    var savedNfcSites by remember { mutableStateOf(false) }
+    if(readNfcAddress) network.columba.app.ui.components.NomadKeyBookmarkDialog(
+        action="read",onDismiss={readNfcAddress=false},onComplete={onOpenNfcSite(it.destination)})
+    if(savedNfcSites) network.columba.app.ui.components.NomadKeySavedSitesDialog(
+        onDismiss={savedNfcSites=false},onOpen=onOpenNfcSite)
 
     // Context menu state
     var showContextMenu by remember { mutableStateOf(false) }
@@ -220,6 +227,9 @@ fun AnnounceStreamScreen(
                             expanded = showOverflowMenu,
                             onDismissRequest = { showOverflowMenu = false },
                         ) {
+                            DropdownMenuItem(text={Text("Read NFC saved address")},onClick={showOverflowMenu=false;readNfcAddress=true})
+                            DropdownMenuItem(text={Text("Saved NFC sites")},onClick={showOverflowMenu=false;savedNfcSites=true})
+                            HorizontalDivider()
                             DropdownMenuItem(
                                 leadingIcon = {
                                     Icon(

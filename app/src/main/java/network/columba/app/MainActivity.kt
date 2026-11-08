@@ -1449,6 +1449,7 @@ fun ColumbaNavigation(
                             ) { backStackEntry ->
                                 val filterType = backStackEntry.arguments?.getString("filterType")
                                 AnnounceStreamScreen(
+                                    onOpenNfcSite = { hash -> navController.navigate("nomadnet_browser/$hash") },
                                     initialFilterType = filterType,
                                     onPeerClick = { destinationHash, _ ->
                                         val encodedHash = Uri.encode(destinationHash)
