@@ -1,5 +1,9 @@
 # Verification status
 
+## Dev7 NFC saved addresses
+
+NFC bookmark save/read and persistent full service pins are implemented. See [dev7 guide](ANDROID_DEV7.md) and [format/security model](NFC_BOOKMARKS.md). 68 SDK tests passed (2 skipped), 135 targeted Android tests passed, and the real-RNS software authentication/session smoke test passed. No physical dev7 bookmark save/read has been performed. Actual Flex/YubiKey storage compatibility and successful provisioning remain hardware-dependent checks. No PiMonitor deployment or key write was performed by this update. APK build, package/version and unchanged signing certificate verification passed; the packaged Python assets include the dev7 bookmark module.
+
 ## Dev6 NFC progress and bounded retries
 
 The user requested visible authentication progress, tolerance of brief NFC contact loss, a 15-second attempt window, and explicit Success/Continue or Failed/Try again screens. Dev6 implements this in the NFC activity. Try again returns to the page; it does not automatically resubmit a PIN. Only observed transport I/O failures permit another detection within the same deadline. See [dev6 guide](ANDROID_DEV6.md). Physical dev6 testing remains pending; server and enrolled credentials are unchanged.
