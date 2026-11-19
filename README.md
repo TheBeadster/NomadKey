@@ -21,13 +21,13 @@ SMS 2FA is more awkward. If I lose my SIM while abroad, getting a replacement ca
 
 My solution is to keep the SIM used for SMS 2FA safely at home in an old Android phone dedicated to receiving messages and making them available over Reticulum to authenticated endpoints. Services must send their codes to that SIM's number instead of the SIM in my everyday phone.
 
-The published Host dev2 build lets authenticated users read Android-visible SMS on protected pages. Registered endpoints can receive sender/time alerts, without the message body or login code. Access expires after five minutes even while browsing; Forget me ends it sooner.
+The server lets authenticated users read Android-visible SMS on protected pages. Registered endpoints default to sender/time alerts without message contents. Current development builds also offer owner-controlled full-message delivery; receiving apps may retain delivered messages. Protected-page access expires after five minutes even while browsing; Forget me ends it sooner.
 
 ## Try secure pages without a SIM
 
 **A SIM is not required to try secure NomadNet pages and NFC authentication.** Use a working Reticulum connection, enroll an approved key and test opening a protected page through NomadKey-enabled Columba. Try expiry and Forget me too.
 
-**Without a SIM, this server cannot receive real carrier SMS.** No-SIM testing demonstrates secure-page access and authentication, not carrier SMS reception or real 2FA delivery. Any sample messages used in a walkthrough must be clearly labelled **DEMONSTRATION DATA — not a real SMS or 2FA code**. A no-SIM trial is not a claim that this build has a sample-message generator.
+**Without a SIM, this server cannot receive real carrier SMS.** No-SIM testing demonstrates secure-page access and authentication, not carrier SMS reception or real 2FA delivery. Any sample messages used in a walkthrough must be clearly labelled **DEMONSTRATION DATA â€” not a real SMS or 2FA code**. A no-SIM trial is not a claim that this build has a sample-message generator.
 
 ## How it fits together
 
@@ -37,15 +37,20 @@ The infographic is a conceptual overview. Real SMS requires an active receiving 
 
 This remains a development project. Use a trusted client phone and app, verify the genuine service, and keep a separately enrolled backup key.
 
-## Android download
+## Latest development downloads
 
-For the published development server, use the [Android Host setup guide](docs/ANDROID-HOST.md). The downloads below are development builds; hardware, carrier SMS and alert delivery require testing on your actual devices.
+| App | Direct APK download |
+| --- | --- |
+| Columba with NomadKey NFC | [Columba 2.3.1-beta dev19](https://github.com/TheBeadster/NomadKey/releases/download/nomadkey-20261119-dev/NomadKey-Columba-2.3.1-beta-dev19.apk) |
+| Android SMS / secure-page server | [NomadKey SMS Server 0.2-dev27](https://github.com/TheBeadster/NomadKey/releases/download/nomadkey-20261119-dev/NomadKey-SMS-Server-0.2-dev27.apk) |
 
-**New Android Host experiment:** turn a spare NFC Android phone into a secure page server or SMS relay. [Download Host dev2](https://github.com/TheBeadster/NomadKey/releases/tag/nomadkey-host-dev2). See [setup, platform limits and physical test checklist](docs/ANDROID-HOST.md) and [dev2 changes and checks](docs/HOST-DEV2.md). This is a separate app, with a new service identity and new key enrolment; it does not change PiMonitor.
+[Release notes and validation limits](https://github.com/TheBeadster/NomadKey/releases/tag/nomadkey-20261119-dev) · [SHA-256 checksums](https://github.com/TheBeadster/NomadKey/releases/download/nomadkey-20261119-dev/SHA256SUMS.txt)
 
-Get the [NomadKey-enabled Columba development APK](https://github.com/TheBeadster/NomadKey/releases/tag/nomadkey-host-dev1) and follow the [installation and NFC instructions](docs/ANDROID_DEV8.md). Use dev6 or newer for a Flex that also stores a website. Upgrade the existing Columba NomadKey DEV app in place; existing enrolled keys remain valid. New users still need trusted administrator enrollment and permission: installing this app alone does not unlock a protected site.
+These are development builds, not official upstream Columba or production releases. Update the matching NomadKey development app in place to preserve identities and enrollment; do not uninstall to bypass an update error. The Columba APK is universal, including S24-compatible arm64 support.
 
-The backend, protocol and tests are on this branch. Columba changes are on [columba/nomadkey-development](https://github.com/TheBeadster/NomadKey/tree/columba/nomadkey-development). APKs are development builds with published checksums, not official upstream Columba releases.
+**No-SIM trial:** secure pages and NFC authentication can be tried without a SIM. Real carrier SMS reception requires an active receiving SIM and service. Examples are **DEMONSTRATION DATA**, not real SMS or 2FA codes. Software checks passed; this exact pair has not had a fresh physical Flex/S24 and carrier-SMS acceptance test.
+
+The [Android Host guide](docs/ANDROID-HOST.md) documents the earlier Host setup baseline. See the current release notes above for exact APK versions, checks and source-provenance limitations. Columba source is maintained on [its separate branch](https://github.com/TheBeadster/NomadKey/tree/columba/nomadkey-development).
 
 ## Technical explanation
 
