@@ -23,11 +23,9 @@ My solution is to keep the SIM used for SMS 2FA safely at home in an old Android
 
 The server lets authenticated users read Android-visible SMS on protected pages. Registered endpoints default to sender/time alerts without message contents. Current development builds also offer owner-controlled full-message delivery; receiving apps may retain delivered messages. Protected-page access expires after five minutes even while browsing; Forget me ends it sooner.
 
-## Try secure pages without a SIM
+## Try it on an old Android phone
 
-**A SIM is not required to try secure NomadNet pages and NFC authentication.** Use a working Reticulum connection, enroll an approved key and test opening a protected page through NomadKey-enabled Columba. Try expiry and Forget me too.
-
-**Without a SIM, this server cannot receive real carrier SMS.** No-SIM testing demonstrates secure-page access and authentication, not carrier SMS reception or real 2FA delivery. Any sample messages used in a walkthrough must be clearly labelled **DEMONSTRATION DATA â€” not a real SMS or 2FA code**. A no-SIM trial is not a claim that this build has a sample-message generator.
+You can try the backend server on any old Android phone you have. You only need a SIM if you want to receive and forward SMS 2FA codes.
 
 ## How it fits together
 
@@ -48,7 +46,7 @@ This remains a development project. Use a trusted client phone and app, verify t
 
 These are development builds, not official upstream Columba or production releases. Update the matching NomadKey development app in place to preserve identities and enrollment; do not uninstall to bypass an update error. The Columba APK is universal, including S24-compatible arm64 support.
 
-**No-SIM trial:** secure pages and NFC authentication can be tried without a SIM. Real carrier SMS reception requires an active receiving SIM and service. Examples are **DEMONSTRATION DATA**, not real SMS or 2FA codes. Software checks passed; this exact pair has not had a fresh physical Flex/S24 and carrier-SMS acceptance test.
+You can try the backend server on any old Android phone you have. You only need a SIM if you want to receive and forward SMS 2FA codes.
 
 The [Android Host guide](docs/ANDROID-HOST.md) documents the earlier Host setup baseline. See the current release notes above for exact APK versions, checks and source-provenance limitations. Columba source is maintained on [its separate branch](https://github.com/TheBeadster/NomadKey/tree/columba/nomadkey-development).
 
