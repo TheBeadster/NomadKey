@@ -4,6 +4,19 @@
 
 NomadKey is an addition to Columba. It adds an **NFC key reader** to the fingerprint menu in Columba's NomadNet browser, allowing you to authenticate with a registered **YubiKey or Apex Flex**.
 
+## Latest development downloads
+
+| App | Direct APK download |
+| --- | --- |
+| Columba with NomadKey NFC | [Columba 2.3.1-beta dev19](https://github.com/TheBeadster/NomadKey/releases/download/nomadkey-20261119-dev/NomadKey-Columba-2.3.1-beta-dev19.apk) |
+| Android SMS / secure-page server | [NomadKey SMS Server 0.2-dev27](https://github.com/TheBeadster/NomadKey/releases/download/nomadkey-20261119-dev/NomadKey-SMS-Server-0.2-dev27.apk) |
+
+[Release notes and validation limits](https://github.com/TheBeadster/NomadKey/releases/tag/nomadkey-20261119-dev) · [SHA-256 checksums](https://github.com/TheBeadster/NomadKey/releases/download/nomadkey-20261119-dev/SHA256SUMS.txt)
+
+These are development builds, not official upstream Columba or production releases. Update the matching NomadKey development app in place to preserve identities and enrollment; do not uninstall to bypass an update error. The Columba APK is universal, including S24-compatible arm64 support.
+
+**No-SIM trial:** secure pages and NFC authentication can be tried without a SIM. Real carrier SMS reception requires an active receiving SIM and service. Examples are **DEMONSTRATION DATA**, not real SMS or 2FA codes. Software checks passed; this exact pair has not had a fresh physical Flex/S24 and carrier-SMS acceptance test.
+
 ## What is it for?
 
 An LXMF address identifies a messaging endpoint. It does not prove who is holding the phone. NomadKey adds a separate check using an approved hardware key.
@@ -22,7 +35,7 @@ Open the genuine server's page, use the fingerprint menu's NFC key reader and fo
 
 The separate [NomadKey Android Server](https://github.com/TheBeadster/NomadKey) can keep your SMS receiving SIM at home and provide authenticated access to codes over Reticulum. This is one use of NomadKey; NFC authentication can protect other private pages too.
 
-**Try it without a SIM:** the Android server can be used to try secure pages and authentication without receiving SMS. It cannot receive real carrier SMS without a SIM. Any example messages must be labelled **DEMONSTRATION DATA — not a real SMS or 2FA code**.
+**Try it without a SIM:** the Android server can be used to try secure pages and authentication without receiving SMS. It cannot receive real carrier SMS without a SIM. Any example messages must be labelled **DEMONSTRATION DATA â€” not a real SMS or 2FA code**.
 
 ![NomadKey: NFC authentication, identity independent of the endpoint, and SMS access over Reticulum](docs/images/nomadkey-infographic.png)
 
