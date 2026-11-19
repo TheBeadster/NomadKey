@@ -1,38 +1,45 @@
-# NomadKey: your security key opens your private pages
+# NomadKey Android Server
 
-**Keep your private information at home. Use your key to read it from another trusted phone.**
+**Keep your SMS receiver at home. Use your hardware key to access private pages wherever you have a Reticulum connection.**
 
-Imagine a locked cupboard. You can see its door, but you need the right key to
-open it. NomadKey puts a door like that in front of private NomadNet pages.
-Your Flex or YubiKey is the key. You tap it, enter its PIN, and the site checks
-that it is a key the owner has approved. The secret inside the key never leaves it.
+NomadKey Host turns a spare Android phone into a secure NomadNet page server and SMS receiver. It works with the separate NomadKey addition to Columba, which supplies the NFC key reader. The server handles authentication, permissions and protected content.
 
-Why is this useful? A network address tells the site which app is talking to it.
-It does not prove which person is holding the phone. NomadKey adds a separate
-check using your security key. Your access follows your approved key, so you can
-use a different trusted phone or a fresh network identity without copying your
-usual identity onto that phone.
+## Two separate parts
 
-For example, leave a spare phone at home with **NomadKey Host** installed. Use
-**Columba** on the phone you carry to visit it. After you use your key, you can
-read a private page or the text messages that Android makes available on the
-home phone. Access closes after five minutes, even if you keep reading.
-**Forget me** closes it sooner.
+| Item | Purpose |
+| --- | --- |
+| [NomadKey for Columba](https://github.com/TheBeadster/NomadKey/tree/columba/nomadkey-development) | Adds NFC hardware-key authentication to Columba's NomadNet browser. |
+| NomadKey Android Server (this project) | Hosts protected pages, verifies hardware-key proofs and provides access to Android-visible SMS. |
 
-You can also ask for a small alert when a text arrives. It tells you who sent it
-and when, but leaves out the message and any login code. The Host can warn about
-a missing SIM or lost service too. That is a warning to check the phone, not
-proof of a stolen phone number.
+An LXMF address identifies a messaging endpoint; it does not prove which person is using it. Reticulum provides encrypted transport. Your registered YubiKey or Apex Flex authenticates you to NomadKey by proving control of an approved credential. A different trusted phone or a fresh LXMF address can be used, subject to the server's enrollment and access rules. The hardware key's private key stays inside it.
 
-The aim is simple: **let an approved key unlock temporary access, without making
-a permanent network identity your password.** You still need a trustworthy phone
-and app, and you must check that you opened the genuine site.
+## Why I developed it
 
-This is a **development project**. Some Android phones hide login-code messages.
-The new Host app still needs real-phone NFC, SMS and alert tests. Banking
-integration is not included. The technical explanation and test details follow below.
+I travel a lot and now keep my authenticator credentials and passkeys on a YubiKey. If my phone breaks, gets lost or is stolen, I still have those credentials on my separate key.
+
+SMS 2FA is more awkward. If I lose my SIM while abroad, getting a replacement can take a long and inconvenient time. SIM swapping is another concern.
+
+My solution is to keep the SIM used for SMS 2FA safely at home in an old Android phone dedicated to receiving messages and making them available over Reticulum to authenticated endpoints. Services must send their codes to that SIM's number instead of the SIM in my everyday phone.
+
+The published Host dev2 build lets authenticated users read Android-visible SMS on protected pages. Registered endpoints can receive sender/time alerts, without the message body or login code. Access expires after five minutes even while browsing; Forget me ends it sooner.
+
+## Try secure pages without a SIM
+
+**A SIM is not required to try secure NomadNet pages and NFC authentication.** Use a working Reticulum connection, enroll an approved key and test opening a protected page through NomadKey-enabled Columba. Try expiry and Forget me too.
+
+**Without a SIM, this server cannot receive real carrier SMS.** No-SIM testing demonstrates secure-page access and authentication, not carrier SMS reception or real 2FA delivery. Any sample messages used in a walkthrough must be clearly labelled **DEMONSTRATION DATA — not a real SMS or 2FA code**. A no-SIM trial is not a claim that this build has a sample-message generator.
+
+## How it fits together
+
+![NomadKey: NFC authentication, identity independent of the endpoint, and SMS access over Reticulum](docs/images/nomadkey-infographic.png)
+
+The infographic is a conceptual overview. Real SMS requires an active receiving SIM and mobile service. Android may restrict access to OTP messages. Hardware, carrier reception and delivery need checking separately on the actual devices. Keeping the SIM at home does not prevent a carrier-side SIM swap. Reticulum needs a working route, and delivery before a code expires is not guaranteed.
+
+This remains a development project. Use a trusted client phone and app, verify the genuine service, and keep a separately enrolled backup key.
 
 ## Android download
+
+For the published development server, use the [Android Host setup guide](docs/ANDROID-HOST.md). The downloads below are development builds; hardware, carrier SMS and alert delivery require testing on your actual devices.
 
 **New Android Host experiment:** turn a spare NFC Android phone into a secure page server or SMS relay. [Download Host dev2](https://github.com/TheBeadster/NomadKey/releases/tag/nomadkey-host-dev2). See [setup, platform limits and physical test checklist](docs/ANDROID-HOST.md) and [dev2 changes and checks](docs/HOST-DEV2.md). This is a separate app, with a new service identity and new key enrolment; it does not change PiMonitor.
 
