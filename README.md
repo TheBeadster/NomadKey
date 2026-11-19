@@ -15,7 +15,7 @@ NomadKey is an addition to Columba. It adds an **NFC key reader** to the fingerp
 
 These are development builds, not official upstream Columba or production releases. Update the matching NomadKey development app in place to preserve identities and enrollment; do not uninstall to bypass an update error. The Columba APK is universal, including S24-compatible arm64 support.
 
-**No-SIM trial:** secure pages and NFC authentication can be tried without a SIM. Real carrier SMS reception requires an active receiving SIM and service. Examples are **DEMONSTRATION DATA**, not real SMS or 2FA codes. Software checks passed; this exact pair has not had a fresh physical Flex/S24 and carrier-SMS acceptance test.
+You can try the backend server on any old Android phone you have. You only need a SIM if you want to receive and forward SMS 2FA codes.
 
 ## What is it for?
 
@@ -29,13 +29,13 @@ Reticulum securely transports the data; your hardware key proves control of the 
 - A supported FIDO2 NFC key, such as a YubiKey or Apex Flex, enrolled with the service.
 - A reachable NomadNet server running the NomadKey authentication backend. An ordinary static NomadNet page alone cannot verify the key and grant access.
 
-Open the genuine server's page, use the fingerprint menu's NFC key reader and follow the PIN/key prompts. The server checks a fresh cryptographic proof before granting temporary access. The private key stays inside the authenticator. Identify alone does not unlock protected pages.
+Open the server's NomadNet page in Columba. Then open the fingerprint menu, choose NFC and follow the PIN/key prompts. The server checks a fresh cryptographic proof before granting temporary access. The private key stays inside the authenticator. Identify alone does not unlock protected pages.
 
 ## Example: SMS 2FA while travelling
 
 The separate [NomadKey Android Server](https://github.com/TheBeadster/NomadKey) can keep your SMS receiving SIM at home and provide authenticated access to codes over Reticulum. This is one use of NomadKey; NFC authentication can protect other private pages too.
 
-**Try it without a SIM:** the Android server can be used to try secure pages and authentication without receiving SMS. It cannot receive real carrier SMS without a SIM. Any example messages must be labelled **DEMONSTRATION DATA â€” not a real SMS or 2FA code**.
+You can try the backend server on any old Android phone you have. You only need a SIM if you want to receive and forward SMS 2FA codes.
 
 ![NomadKey: NFC authentication, identity independent of the endpoint, and SMS access over Reticulum](docs/images/nomadkey-infographic.png)
 
