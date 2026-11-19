@@ -33,7 +33,7 @@ Open the server's NomadNet page in Columba. Then open the fingerprint menu, choo
 
 ## Example: SMS 2FA while travelling
 
-The separate [NomadKey Android Server](https://github.com/TheBeadster/NomadKey) can keep your SMS receiving SIM at home and provide authenticated access to codes over Reticulum. This is one use of NomadKey; NFC authentication can protect other private pages too.
+The separate [NomadKey Android Server](https://github.com/TheBeadster/NomadKey/blob/main/ANDROID-SERVER.md) can keep your SMS receiving SIM at home and provide authenticated access to codes over Reticulum. This is one use of NomadKey; NFC authentication can protect other private pages too.
 
 You can try the backend server on any old Android phone you have. You only need a SIM if you want to receive and forward SMS 2FA codes.
 
